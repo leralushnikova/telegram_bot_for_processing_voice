@@ -1,0 +1,18 @@
+spring:
+  application:
+    name: telegram_bot_for_processing_voice
+telegram:
+  bot:
+    token:
+    username: StatVoiceBot
+
+connection:
+  yandex:
+    folder-id: b1gcme9fkkdpnbokpd52
+    token:
+    url: https://stt.api.cloud.yandex.net
+    default-language: ru-RU
+
+
+
+
