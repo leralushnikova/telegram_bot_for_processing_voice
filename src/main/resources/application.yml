@@ -9,7 +9,6 @@ telegram:
 connection:
   yandex:
     folder-id:
-    token:
     url: https://stt.api.cloud.yandex.net
     default-language: ru-RU
 
