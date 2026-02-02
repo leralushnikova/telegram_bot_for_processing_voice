@@ -1,7 +1,7 @@
 package com.telegram_bot_for_processing_voice.service.impl;
 
-import com.telegram_bot_for_processing_voice.dto.YandexSpeechKitDTO;
-import com.telegram_bot_for_processing_voice.feign.YandexSpeechKitClient;
+import com.telegram_bot_for_processing_voice.dto.YandexCloudDTO;
+import com.telegram_bot_for_processing_voice.feign.YandexCloudClient;
 import com.telegram_bot_for_processing_voice.service.SpeechRecognitionService;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
@@ -22,18 +22,18 @@ public class YandexSpeechRecognitionService implements SpeechRecognitionService 
     @Value("${connection.yandex.default-language}")
     private String defaultLanguage;
 
-    private final YandexSpeechKitClient yandexSpeechKitClient;
+    private final YandexCloudClient yandexCloudClient;
 
     @Override
     public String recognizeSpeech(byte[] audioData) {
-        YandexSpeechKitDTO yandexSpeechKitDTO;
+        YandexCloudDTO yandexCloudDTO;
         try {
-            yandexSpeechKitDTO = yandexSpeechKitClient.createTextFromVoice(folderId, defaultLanguage, audioData).getBody();
+            yandexCloudDTO = yandexCloudClient.createTextFromVoice(folderId, defaultLanguage, audioData).getBody();
         } catch (FeignException ex) {
             log.error("Ошибка при запросе информации в YandexSpeechKit", ex);
             throw new HttpClientErrorException(HttpStatus.valueOf(ex.status()),
                     "Ошибка при запросе информации в YandexSpeechKit");
         }
-        return yandexSpeechKitDTO.result();
+        return yandexCloudDTO.result();
     }
 }

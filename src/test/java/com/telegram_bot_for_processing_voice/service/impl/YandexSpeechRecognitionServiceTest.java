@@ -1,7 +1,7 @@
 package com.telegram_bot_for_processing_voice.service.impl;
 
-import com.telegram_bot_for_processing_voice.dto.YandexSpeechKitDTO;
-import com.telegram_bot_for_processing_voice.feign.YandexSpeechKitClient;
+import com.telegram_bot_for_processing_voice.dto.YandexCloudDTO;
+import com.telegram_bot_for_processing_voice.feign.YandexCloudClient;
 import feign.FeignException;
 import org.instancio.Instancio;
 import org.junit.jupiter.api.DisplayName;
@@ -33,7 +33,7 @@ class YandexSpeechRecognitionServiceTest {
     YandexSpeechRecognitionService yandexSpeechRecognitionService;
 
     @Mock
-    YandexSpeechKitClient yandexSpeechKitClient;
+    YandexCloudClient yandexCloudClient;
 
     @Mock
     FeignException feignException;
@@ -41,9 +41,9 @@ class YandexSpeechRecognitionServiceTest {
     @Test
     @DisplayName("Проверка распознавания речи")
     void recognizeSpeechSuccess() {
-        YandexSpeechKitDTO yandexSpeechKitDTO = Instancio.create(YandexSpeechKitDTO.class);
-        ResponseEntity<YandexSpeechKitDTO> responseEntity =
-                new ResponseEntity<>(yandexSpeechKitDTO, HttpStatus.OK);
+        YandexCloudDTO yandexCloudDTO = Instancio.create(YandexCloudDTO.class);
+        ResponseEntity<YandexCloudDTO> responseEntity =
+                new ResponseEntity<>(yandexCloudDTO, HttpStatus.OK);
 
         byte[] audioData = new byte[1024];
         Arrays.fill(audioData, (byte) 1);
@@ -53,13 +53,13 @@ class YandexSpeechRecognitionServiceTest {
         ReflectionTestUtils.setField(yandexSpeechRecognitionService, "folderId", folderId);
         ReflectionTestUtils.setField(yandexSpeechRecognitionService, "defaultLanguage", lang);
 
-        when(yandexSpeechKitClient.createTextFromVoice(eq(folderId), eq(lang), same(audioData))).thenReturn(responseEntity);
+        when(yandexCloudClient.createTextFromVoice(eq(folderId), eq(lang), same(audioData))).thenReturn(responseEntity);
 
         String result = yandexSpeechRecognitionService.recognizeSpeech(audioData);
 
-        assertThat(result).isEqualTo(yandexSpeechKitDTO.result());
+        assertThat(result).isEqualTo(yandexCloudDTO.result());
 
-        verify(yandexSpeechKitClient).createTextFromVoice(eq(folderId), eq(lang), same(audioData));
+        verify(yandexCloudClient).createTextFromVoice(eq(folderId), eq(lang), same(audioData));
     }
 
     @Test
@@ -74,13 +74,13 @@ class YandexSpeechRecognitionServiceTest {
         ReflectionTestUtils.setField(yandexSpeechRecognitionService, "defaultLanguage", lang);
 
         when(feignException.status()).thenReturn(400);
-        when(yandexSpeechKitClient.createTextFromVoice(eq(folderId), eq(lang), same(audioData))).thenThrow(feignException);
+        when(yandexCloudClient.createTextFromVoice(eq(folderId), eq(lang), same(audioData))).thenThrow(feignException);
 
         assertThatThrownBy(() -> yandexSpeechRecognitionService.recognizeSpeech(audioData))
                 .isInstanceOf(HttpClientErrorException.class)
                 .hasMessage("400 Ошибка при запросе информации в YandexSpeechKit");
 
-        verify(yandexSpeechKitClient).createTextFromVoice(eq(folderId), eq(lang), same(audioData));
-        verifyNoMoreInteractions(yandexSpeechKitClient);
+        verify(yandexCloudClient).createTextFromVoice(eq(folderId), eq(lang), same(audioData));
+        verifyNoMoreInteractions(yandexCloudClient);
     }
 }
