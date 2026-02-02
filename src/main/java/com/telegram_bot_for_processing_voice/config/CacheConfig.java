@@ -20,7 +20,7 @@ public class CacheConfig {
 
     private static final int EXPIRES_IN_TOKEN = 39944;
 
-    @Value("${cache.yandexSpeechKitTokens}")
+    @Value("${cache.yandexCloudToken}")
     private String yandexCloudToken;
 
     /**
