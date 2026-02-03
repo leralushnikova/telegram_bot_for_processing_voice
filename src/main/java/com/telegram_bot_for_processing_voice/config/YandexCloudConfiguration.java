@@ -16,8 +16,8 @@ public class YandexCloudConfiguration {
 //    private static final String AUTH_TOKEN_TYPE = "Bearer ";
     private static final String AUTHORIZATION = "Authorization";
 
-    @Value("${connection.yandex.token}")
-    private String token;
+//    @Value("${connection.yandex.token}")
+//    private String token;
 
     /**
      * Создает interceptor для Feign-запросов в YandexCloud, который добавляет заголовок
