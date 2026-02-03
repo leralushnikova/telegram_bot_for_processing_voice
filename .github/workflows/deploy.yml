@@ -1,4 +1,4 @@
-name: StatVoiceBot
+name: Deploy Bot
 on:
   push:
     branches: [ main ]
@@ -8,48 +8,46 @@ jobs:
   deploy:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      - name: Deploy to VPS
+      - name: Deploy
         uses: appleboy/ssh-action@v0.1.5
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script_timeout: 30m  # Увеличиваем таймаут!
+          script_timeout: 20m
           script: |
             echo "🚀 Deploying..."
             
-            # Создаем директорию
+            # Переходим в папку проекта
             PROJECT_DIR="$HOME/projects/stat-voice-bot"
             mkdir -p "$PROJECT_DIR"
             cd "$PROJECT_DIR"
             
-            # Клонируем
+            # Обновляем код
             git clone https://github.com/${{ github.repository }} . 2>/dev/null || git pull
             
-            # .env
+            # Создаем .env
             cat > .env << EOF
             TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
             CONNECTION_YANDEX_FOLDER_ID=${{ secrets.CONNECTION_YANDEX_FOLDER_ID }}
             EOF
             
-            # Останавливаем и собираем с увеличенным таймаутом
+            # Удаляем старый контейнер и собираем новый
             docker-compose down 2>/dev/null || true
-            
-            # Собираем с увеличенным таймаутом для Docker
-            timeout 600 docker-compose build --no-cache || echo "Build might be slow but continuing..."
-            
-            # Запускаем
+            docker-compose build --no-cache
             docker-compose up -d
             
-            # Ждем дольше
-            sleep 30
+            # Проверяем
+            sleep 10
             
-            if docker ps | grep -q "stat_voice_bot"; then
-              echo "✅ Success!"
+            if docker ps --format "{{.Names}}" | grep -q "stat_voice_bot"; then
+              echo "✅ Bot deployed successfully!"
+              echo "🌐 Access: http://${{ secrets.SERVER_HOST }}:8080"
             else
-              echo "❌ Failed. Logs:"
-              docker-compose logs --tail=20
+              echo "❌ Failed to start"
+              docker-compose logs --tail=30
               exit 1
             fi

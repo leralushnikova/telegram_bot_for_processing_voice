@@ -8,14 +8,10 @@ COPY checkstyle ./checkstyle
 
 RUN mvn clean package -DskipTests
 
-# Используем slim образ вместо alpine - он стабильнее
-FROM amazoncorretto:17-slim
+FROM amazoncorretto:17-alpine
 
-# Устанавливаем шрифты (Debian-based, быстрее)
-RUN apt-get update && apt-get install -y \
-    fontconfig \
-    fonts-dejavu \
-    && rm -rf /var/lib/apt/lists/*
+# Устанавливаем шрифты
+RUN apk add --no-cache fontconfig ttf-dejavu
 
 COPY --from=build /app/target/*.jar /stat_voice_bot.jar
 
