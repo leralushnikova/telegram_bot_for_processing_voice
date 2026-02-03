@@ -3,13 +3,45 @@ name: StatVoiceBot
 on:
   push:
     branches: [ main ]
+  workflow_dispatch:  # Добавим ручной запуск
 
 jobs:
   deploy:
     runs-on: ubuntu-22.04
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+
+      - name: Debug - Check secrets exist
+        run: |
+          echo "Checking secrets..."
+          echo "SERVER_HOST length: ${#SERVER_HOST}"
+          echo "SERVER_USER length: ${#SERVER_USER}"
+          echo "SSH_PRIVATE_KEY length: ${#SSH_PRIVATE_KEY}"
+          echo "TELEGRAM_TOKEN length: ${#TELEGRAM_BOT_TOKEN}"
+          echo "YANDEX_FOLDER length: ${#CONNECTION_YANDEX_FOLDER_ID}"
+        env:
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          CONNECTION_YANDEX_FOLDER_ID: ${{ secrets.CONNECTION_YANDEX_FOLDER_ID }}
+
+      - name: Create temporary SSH key file
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/github_action_key
+          chmod 600 ~/.ssh/github_action_key
+          echo "SSH key saved. First 100 chars:"
+          head -c 100 ~/.ssh/github_action_key
+
+      - name: Test SSH connection manually
+        run: |
+          ssh -o StrictHostKeyChecking=no \
+              -i ~/.ssh/github_action_key \
+              ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
+              "echo '✅ SSH test successful!'; whoami; date"
 
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v0.1.5
@@ -18,24 +50,13 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
+          script_timeout: 10m
           script: |
-            cd /opt/stat-voice-bot
+            echo "=== SSH Connection Successful ==="
+            echo "User: $(whoami)"
+            echo "Date: $(date)"
+            echo "Working dir: $(pwd)"
+            echo "================================"
             
-            # Обновляем код из Git
-            if [ -d ".git" ]; then
-              git pull origin main
-            else
-              git clone https://github.com/${{ github.repository }} .
-            fi
-            
-            # Создаем .env
-            cat > .env << EOF
-            TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
-            CONNECTION_YANDEX_FOLDER_ID=${{ secrets.CONNECTION_YANDEX_FOLDER_ID }}
-            EOF
-            
-            # Перезапускаем контейнер
-            docker-compose down 2>/dev/null || true
-            docker-compose up -d --build
-            
-            echo "✅ Bot deployed and running!"
+            # Остановимся здесь для теста
+            exit 0
