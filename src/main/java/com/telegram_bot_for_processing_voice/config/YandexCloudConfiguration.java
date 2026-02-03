@@ -4,7 +4,6 @@ import com.telegram_bot_for_processing_voice.dto.YandexCloudTokenDTO;
 import com.telegram_bot_for_processing_voice.service.impl.token.YandexCloudTokenService;
 import feign.RequestInterceptor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 
 /**
