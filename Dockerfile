@@ -2,24 +2,31 @@ FROM maven:3.9-amazoncorretto-17 AS build
 
 WORKDIR /app
 
+# 1. Копируем только pom.xml сначала (кэширование зависимостей)
 COPY pom.xml .
+RUN mvn dependency:go-offline -B
+
+# 2. Копируем остальное
 COPY src ./src
 COPY checkstyle ./checkstyle
 
-RUN mvn clean package -DskipTests
+# 3. Собираем с оптимизацией памяти
+ENV MAVEN_OPTS="-Xmx512m -Xms256m"
+RUN mvn clean package -DskipTests -Dmaven.test.skip=true -q
 
 FROM amazoncorretto:17-alpine
 
-# Устанавливаем шрифты
-RUN wget -q https://github.com/dejavu-fonts/dejavu-fonts/releases/download/version_2_37/dejavu-fonts-ttf-2.37.tar.bz2 && \
-    tar -xjf dejavu-fonts-ttf-2.37.tar.bz2 && \
-    mkdir -p /usr/share/fonts/truetype/dejavu && \
-    cp dejavu-fonts-ttf-2.37/ttf/*.ttf /usr/share/fonts/truetype/dejavu/ && \
-    rm -rf dejavu-fonts-ttf-2.37 dejavu-fonts-ttf-2.37.tar.bz2 && \
-    apk add --no-cache fontconfig
+# 4. Устанавливаем шрифты САМЫМ БЫСТРЫМ способом
+# Используем конкретные версии пакетов чтобы избежать поиска
+RUN apk add --no-cache --repository=http://dl-cdn.alpinelinux.org/alpine/v3.18/main \
+    fontconfig=2.14.2-r0 \
+    ttf-dejavu=2.37-r3
 
-COPY --from=build /app/target/*.jar /stat_voice_bot.jar
+COPY --from=build /app/target/*.jar /app.jar
 
 EXPOSE 8080
 
-ENTRYPOINT ["java", "-jar", "/stat_voice_bot.jar"]
+# 5. Оптимизация Java для 2 ГБ RAM
+ENV JAVA_OPTS="-Xmx512m -Xms256m -XX:+UseSerialGC -XX:+UseStringDeduplication"
+
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /app.jar"]

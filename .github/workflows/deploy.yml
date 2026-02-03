@@ -1,4 +1,4 @@
-name: Deploy Bot
+name: StatVoiceBot
 on:
   push:
     branches: [ main ]
