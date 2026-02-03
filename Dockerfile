@@ -11,7 +11,12 @@ RUN mvn clean package -DskipTests
 FROM amazoncorretto:17-alpine
 
 # Устанавливаем шрифты
-RUN apk add --no-cache fontconfig ttf-dejavu
+RUN wget -q https://github.com/dejavu-fonts/dejavu-fonts/releases/download/version_2_37/dejavu-fonts-ttf-2.37.tar.bz2 && \
+    tar -xjf dejavu-fonts-ttf-2.37.tar.bz2 && \
+    mkdir -p /usr/share/fonts/truetype/dejavu && \
+    cp dejavu-fonts-ttf-2.37/ttf/*.ttf /usr/share/fonts/truetype/dejavu/ && \
+    rm -rf dejavu-fonts-ttf-2.37 dejavu-fonts-ttf-2.37.tar.bz2 && \
+    apk add --no-cache fontconfig
 
 COPY --from=build /app/target/*.jar /stat_voice_bot.jar
 
