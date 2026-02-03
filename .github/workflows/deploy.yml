@@ -2,6 +2,7 @@ name: StatVoiceBot
 on:
   push:
     branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -16,21 +17,61 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # Рабочая директория
-            cd /opt/stat-voice-bot
+            echo "🚀 Deploying to projects directory..."
             
-            # Обновляем репозиторий
-            git fetch origin main && git reset --hard origin/main || git clone https://github.com/${{ github.repository }} .
+            # 1. СОЗДАЕМ СТРУКТУРУ ПАПОК
+            echo "Step 1: Creating projects structure..."
+            PROJECTS_DIR="$HOME/projects"
+            PROJECT_DIR="$PROJECTS_DIR/stat-voice-bot"
             
-            # Секреты
+            mkdir -p "$PROJECTS_DIR"
+            cd "$PROJECTS_DIR"
+            
+            echo "Projects directory: $PROJECTS_DIR"
+            echo "Project directory: $PROJECT_DIR"
+            ls -la
+            
+            # 2. КЛОНИРУЕМ РЕПОЗИТОРИЙ
+            echo "Step 2: Cloning/updating repository..."
+            if [ -d "$PROJECT_DIR" ]; then
+              echo "Project exists, updating..."
+              cd "$PROJECT_DIR"
+              git pull origin main
+            else
+              echo "Cloning new project..."
+              git clone https://github.com/${{ github.repository }} "$PROJECT_DIR"
+              cd "$PROJECT_DIR"
+            fi
+            
+            # 3. СОЗДАЕМ .env
+            echo "Step 3: Creating .env file..."
             cat > .env << EOF
             TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
             CONNECTION_YANDEX_FOLDER_ID=${{ secrets.CONNECTION_YANDEX_FOLDER_ID }}
             EOF
             
-            # Деплой
-            docker-compose down
+            echo "✅ .env created at: $(pwd)/.env"
+            
+            # 4. ЗАПУСКАЕМ DOCKER
+            echo "Step 4: Starting Docker..."
+            docker-compose down 2>/dev/null || true
             docker-compose up -d --build
             
-            # Краткая проверка
-            echo "Status: $(docker inspect -f '{{.State.Status}}' stat_voice_bot 2>/dev/null || echo 'not found')"
+            # 5. ПРОВЕРЯЕМ
+            echo "Step 5: Verifying..."
+            sleep 5
+            
+            if docker ps --format "{{.Names}}" | grep -q "stat_voice_bot"; then
+              echo "✅ Bot deployed successfully!"
+              echo "📁 Location: $PROJECT_DIR"
+              echo "🐳 Container: stat_voice_bot"
+            
+              # Показываем структуру
+              echo ""
+              echo "📂 Projects structure:"
+              tree -L 2 "$PROJECTS_DIR" || ls -la "$PROJECTS_DIR"
+            else
+              echo "❌ Bot failed to start"
+              docker-compose logs
+              exit 1
+            fi
