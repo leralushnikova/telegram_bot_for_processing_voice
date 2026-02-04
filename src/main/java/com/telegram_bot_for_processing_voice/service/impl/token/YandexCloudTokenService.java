@@ -1,6 +1,5 @@
 package com.telegram_bot_for_processing_voice.service.impl.token;
 
-import com.telegram_bot_for_processing_voice.dto.JwtTokenDTO;
 import com.telegram_bot_for_processing_voice.dto.YandexCloudTokenDTO;
 import com.telegram_bot_for_processing_voice.feign.YandexCloudTokenClient;
 import com.telegram_bot_for_processing_voice.service.JwtService;
