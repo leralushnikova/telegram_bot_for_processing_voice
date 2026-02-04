@@ -6,19 +6,23 @@ telegram:
     token:
     username: StatVoiceBot
 
-connection:
-  yandex:
-    folder-id:
-    token:
-    url: https://stt.api.cloud.yandex.net
-    default-language: ru-RU
-
 yandex:
-  token:
-    url: http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/token
+  iam:
+    url: https://iam.api.cloud.yandex.net/iam/v1/tokens
+  stt:
+    url: https://stt.api.cloud.yandex.net
+  folder-id:
+  default-language: ru-RU
+  auth:
+    id:
+    service_account_id:
+    private_key:
+
 
 cache:
   yandexCloudToken: yandexCloudToken
+
+
 
 
 

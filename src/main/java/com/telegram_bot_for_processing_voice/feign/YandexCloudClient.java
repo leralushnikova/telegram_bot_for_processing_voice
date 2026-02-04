@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
  * Feign-клиент для взаимодействия с внешним API платформы YandexCloud.
  */
 @FeignClient(name = "yandexCloudClient",
-        url = "${connection.yandex.url}",
+        url = "${yandex.stt.url}",
         configuration = YandexCloudConfiguration.class)
 public interface YandexCloudClient {
 

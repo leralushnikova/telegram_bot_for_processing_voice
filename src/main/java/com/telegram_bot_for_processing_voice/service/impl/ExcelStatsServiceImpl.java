@@ -2,9 +2,6 @@ package com.telegram_bot_for_processing_voice.service.impl;
 
 import com.telegram_bot_for_processing_voice.model.enums.Action;
 import com.telegram_bot_for_processing_voice.service.ExcelStatsService;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellStyle;
-import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -143,14 +140,6 @@ public class ExcelStatsServiceImpl implements ExcelStatsService {
         }
         
         totalRow.createCell(actions.length + 1).setCellValue(grandTotal);
-        
-        for (int i = 0; i < actions.length + 2; i++) {
-            Cell cell = totalRow.getCell(i);
-            CellStyle style = sheet.getWorkbook().createCellStyle();
-            Font font = sheet.getWorkbook().createFont();
-            font.setBold(true);
-            style.setFont(font);
-            cell.setCellStyle(style);
-        }
+
     }
 }

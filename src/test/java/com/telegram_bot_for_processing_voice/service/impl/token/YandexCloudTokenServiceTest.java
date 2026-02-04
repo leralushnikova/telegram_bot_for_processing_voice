@@ -1,9 +1,12 @@
 package com.telegram_bot_for_processing_voice.service.impl.token;
 
+import com.telegram_bot_for_processing_voice.dto.JwtTokenDTO;
 import com.telegram_bot_for_processing_voice.dto.YandexCloudTokenDTO;
 import com.telegram_bot_for_processing_voice.feign.YandexCloudTokenClient;
+import com.telegram_bot_for_processing_voice.service.JwtService;
 import com.telegram_bot_for_processing_voice.service.conf.TestYandexCloudConfig;
 import org.assertj.core.api.SoftAssertions;
+import org.instancio.Instancio;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -33,6 +36,9 @@ class YandexCloudTokenServiceTest {
     @MockitoBean
     private YandexCloudTokenClient tokensClient;
 
+    @MockitoBean
+    private JwtService jwtService;
+
     private YandexCloudTokenDTO token;
 
     private Cache cache;
@@ -42,7 +48,7 @@ class YandexCloudTokenServiceTest {
 
     @BeforeEach
     void setUp() {
-        token = new YandexCloudTokenDTO(accessToken, 39944L, "Bearer");
+        token = new YandexCloudTokenDTO(accessToken);
         cache = cacheManager.getCache(yandexCloudToken);
         if (cache != null) {
             cache.clear();
@@ -54,21 +60,24 @@ class YandexCloudTokenServiceTest {
     void getJwtTokenSuccess() {
         String userId = "user123";
         ResponseEntity<YandexCloudTokenDTO> response = new ResponseEntity<>(token, HttpStatus.OK);
+        JwtTokenDTO jwtTokenDTO = Instancio.create(JwtTokenDTO.class);
 
-        when(tokensClient.generateToken(any(String.class))).thenReturn(response);
+        when(jwtService.getJwtToken()).thenReturn(jwtTokenDTO);
+        when(tokensClient.generateToken(jwtTokenDTO)).thenReturn(response);
 
-        YandexCloudTokenDTO result = yandexCloudTokenService.getJwtToken(userId);
+        YandexCloudTokenDTO result = yandexCloudTokenService.getIamToken(userId);
 
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(result).isNotNull();
-            softly.assertThat(result.accessToken()).isEqualTo(accessToken);
+            softly.assertThat(result.iamToken()).isEqualTo(accessToken);
             softly.assertThat(cache).isNotNull();
             YandexCloudTokenDTO cachedToken = cache.get(userId, YandexCloudTokenDTO.class);
             softly.assertThat(cachedToken).isNotNull();
-            softly.assertThat(cachedToken.accessToken()).isEqualTo(accessToken);
+            softly.assertThat(cachedToken.iamToken()).isEqualTo(accessToken);
         });
 
-        verify(tokensClient).generateToken(any(String.class));
+        verify(jwtService).getJwtToken();
+        verify(tokensClient).generateToken(jwtTokenDTO);
     }
 
     @Test
@@ -76,11 +85,11 @@ class YandexCloudTokenServiceTest {
     void getJwtTokenFailed() {
         String userId = "user123";
 
-        when(tokensClient.generateToken(any(String.class))).thenThrow(new RuntimeException("Ошибка генерации токена"));
+        when(tokensClient.generateToken(any(JwtTokenDTO.class))).thenThrow(new RuntimeException("Ошибка генерации токена"));
 
         assertThrows(
                 RuntimeException.class,
-                () -> yandexCloudTokenService.getJwtToken(userId),
+                () -> yandexCloudTokenService.getIamToken(userId),
                 "Ошибка генерации токена"
         );
 
@@ -93,6 +102,6 @@ class YandexCloudTokenServiceTest {
             }
         });
 
-        verify(tokensClient).generateToken(any(String.class));
+        verify(tokensClient).generateToken(any(JwtTokenDTO.class));
     }
 }

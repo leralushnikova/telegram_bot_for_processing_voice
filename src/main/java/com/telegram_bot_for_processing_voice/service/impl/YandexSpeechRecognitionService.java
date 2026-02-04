@@ -16,10 +16,10 @@ import org.springframework.web.client.HttpClientErrorException;
 @RequiredArgsConstructor
 public class YandexSpeechRecognitionService implements SpeechRecognitionService {
 
-    @Value("${connection.yandex.folder-id}")
+    @Value("${yandex.folder-id}")
     private String folderId;
 
-    @Value("${connection.yandex.default-language}")
+    @Value("${yandex.default-language}")
     private String defaultLanguage;
 
     private final YandexCloudClient yandexCloudClient;

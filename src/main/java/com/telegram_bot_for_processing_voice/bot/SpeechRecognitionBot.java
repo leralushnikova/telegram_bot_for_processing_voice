@@ -33,12 +33,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static com.telegram_bot_for_processing_voice.util.StringUtils.COMMAND_EXAMPLE;
-import static com.telegram_bot_for_processing_voice.util.StringUtils.COMMAND_HELP;
-import static com.telegram_bot_for_processing_voice.util.StringUtils.COMMAND_START;
-import static com.telegram_bot_for_processing_voice.util.StringUtils.EXAMPLE_MESSAGE;
-import static com.telegram_bot_for_processing_voice.util.StringUtils.HELP_MESSAGE;
-import static com.telegram_bot_for_processing_voice.util.StringUtils.WELCOME_MESSAGE;
+import static com.telegram_bot_for_processing_voice.util.Constants.COMMAND_EXAMPLE;
+import static com.telegram_bot_for_processing_voice.util.Constants.COMMAND_HELP;
+import static com.telegram_bot_for_processing_voice.util.Constants.COMMAND_START;
+import static com.telegram_bot_for_processing_voice.util.Constants.EXAMPLE_MESSAGE;
+import static com.telegram_bot_for_processing_voice.util.Constants.HELP_MESSAGE;
+import static com.telegram_bot_for_processing_voice.util.Constants.WELCOME_MESSAGE;
 
 /**
  * Telegram бот для распознавания речи и анализа спортивной статистики.

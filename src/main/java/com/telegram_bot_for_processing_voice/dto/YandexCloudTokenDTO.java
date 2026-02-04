@@ -1,11 +1,9 @@
 package com.telegram_bot_for_processing_voice.dto;
 
 /**
- * DTO для представления токена от API YandexCloud.
+ * DTO ответ от API Yandex Cloud с IAM-токеном.
  *
- * @param accessToken - токен.
- * @param expiresIn - оставшееся время жизни токена.
- * @param tokenType - тип токена.
+ * @param iamToken - токен.
  */
-public record YandexCloudTokenDTO(String accessToken, Long expiresIn, String tokenType) {
+public record YandexCloudTokenDTO(String iamToken) {
 }
