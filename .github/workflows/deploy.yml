@@ -17,6 +17,7 @@ jobs:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          token: ${{ vars.CONNECTION_YANDEX_TOKEN }}
           script_timeout: 20m
           script: |
             echo "🚀 Deploying..."
@@ -33,21 +34,18 @@ jobs:
             cat > .env << EOF
             TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
             CONNECTION_YANDEX_FOLDER_ID=${{ secrets.CONNECTION_YANDEX_FOLDER_ID }}
+            CONNECTION_YANDEX_TOKEN=${{ vars.CONNECTION_YANDEX_TOKEN }}
             EOF
             
+            #  Удаляем ВСЕ Docker артефакты
+            docker-compose down --rmi all --volumes --remove-orphans 2>/dev/null || true
+            docker system prune -af
+            
             # Удаляем старый контейнер и собираем новый
-            docker-compose down 2>/dev/null || true
-            docker-compose build --no-cache
+            docker-compose build --no-cache --pull
             docker-compose up -d
             
             # Проверяем
-            sleep 10
+            sleep 15
             
-            if docker ps --format "{{.Names}}" | grep -q "stat_voice_bot"; then
-              echo "✅ Bot deployed successfully!"
-              echo "🌐 Access: http://${{ secrets.SERVER_HOST }}:8080"
-            else
-              echo "❌ Failed to start"
-              docker-compose logs --tail=30
-              exit 1
-            fi
+            echo "✅ Deployed fresh image"
