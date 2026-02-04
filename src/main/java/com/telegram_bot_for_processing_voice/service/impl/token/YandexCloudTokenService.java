@@ -1,5 +1,6 @@
 package com.telegram_bot_for_processing_voice.service.impl.token;
 
+import com.telegram_bot_for_processing_voice.dto.JwtTokenDTO;
 import com.telegram_bot_for_processing_voice.dto.YandexCloudTokenDTO;
 import com.telegram_bot_for_processing_voice.feign.YandexCloudTokenClient;
 import com.telegram_bot_for_processing_voice.service.JwtService;
@@ -32,7 +33,8 @@ public class YandexCloudTokenService {
         log.info("Токен отсутствует в кэше. Запрос токена через YandexCloudTokenDTO для userId={}",
                 userId);
 
-        YandexCloudTokenDTO token = yandexCloudTokenClient.generateToken(jwtService.getJwtToken()).getBody();
+        JwtTokenDTO jwtTokenDTO = jwtService.getJwtToken();
+        YandexCloudTokenDTO token = yandexCloudTokenClient.generateToken(jwtTokenDTO).getBody();
         if (token == null) {
             log.error("Ошибка: сервер не вернул токены для пользователя userId={}", userId);
             throw new IllegalStateException("Сервер не вернул токены для пользователя: " + userId);

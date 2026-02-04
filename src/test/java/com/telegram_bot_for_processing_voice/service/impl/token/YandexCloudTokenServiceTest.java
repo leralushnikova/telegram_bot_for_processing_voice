@@ -84,8 +84,10 @@ class YandexCloudTokenServiceTest {
     @DisplayName("Не должен сохранять JWT-токен в кэше при ошибке")
     void getJwtTokenFailed() {
         String userId = "user123";
+        JwtTokenDTO jwtTokenDTO = Instancio.create(JwtTokenDTO.class);
 
-        when(tokensClient.generateToken(any(JwtTokenDTO.class))).thenThrow(new RuntimeException("Ошибка генерации токена"));
+        when(jwtService.getJwtToken()).thenReturn(jwtTokenDTO);
+        when(tokensClient.generateToken(jwtTokenDTO)).thenThrow(new RuntimeException("Ошибка генерации токена"));
 
         assertThrows(
                 RuntimeException.class,
@@ -102,6 +104,6 @@ class YandexCloudTokenServiceTest {
             }
         });
 
-        verify(tokensClient).generateToken(any(JwtTokenDTO.class));
+        verify(tokensClient).generateToken(jwtTokenDTO);
     }
 }
