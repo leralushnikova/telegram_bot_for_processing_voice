@@ -35,7 +35,7 @@ jobs:
             YANDEX_FOLDER_ID=${{ secrets.YANDEX_FOLDER_ID }}
             YANDEX_AUTH_ID=${{ secrets.YANDEX_AUTH_ID }}
             YANDEX_AUTH_SERVICE_ACCOUNT_ID=${{ secrets.YANDEX_AUTH_SERVICE_ACCOUNT_ID }}
-            YANDEX_AUTH_PRIVATE_KEY="${{ secrets.YANDEX_AUTH_PRIVATE_KEY }}"
+            YANDEX_AUTH_PRIVATE_KEY=${{ secrets.YANDEX_AUTH_PRIVATE_KEY }}
             EOF
             
             #  Удаляем ВСЕ Docker артефакты
