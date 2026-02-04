@@ -1,9 +1,9 @@
 package com.telegram_bot_for_processing_voice.config;
 
-import com.telegram_bot_for_processing_voice.dto.YandexCloudTokenDTO;
 import com.telegram_bot_for_processing_voice.service.impl.token.YandexCloudTokenService;
 import feign.RequestInterceptor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 
 /**
@@ -12,11 +12,11 @@ import org.springframework.context.annotation.Bean;
 @Slf4j
 public class YandexCloudConfiguration {
 
-//    private static final String AUTH_TOKEN_TYPE = "Bearer ";
+    private static final String AUTH_TOKEN_TYPE = "Bearer ";
     private static final String AUTHORIZATION = "Authorization";
 
-//    @Value("${connection.yandex.token}")
-//    private String token;
+    @Value("${connection.yandex.token}")
+    private String token;
 
     /**
      * Создает interceptor для Feign-запросов в YandexCloud, который добавляет заголовок
@@ -30,14 +30,14 @@ public class YandexCloudConfiguration {
     public RequestInterceptor openAIRequestInterceptor(YandexCloudTokenService yandexCloudTokenService) {
         return requestTemplate -> {
 
-            String userId =
-                    "текущий пользователь"; //TODO настроить получение уник.атрибута пользователя;
+//            String userId =
+//                    "текущий пользователь"; //TODO настроить получение уник.атрибута пользователя;
 
-//            requestTemplate.header(AUTHORIZATION, AUTH_TOKEN_TYPE + token);
+            requestTemplate.header(AUTHORIZATION, AUTH_TOKEN_TYPE + token);
+
+//            YandexCloudTokenDTO token = yandexCloudTokenService.getJwtToken(userId);
 //
-            YandexCloudTokenDTO token = yandexCloudTokenService.getJwtToken(userId);
-
-            requestTemplate.header(AUTHORIZATION, token.tokenType() + " " + token.accessToken());
+//            requestTemplate.header(AUTHORIZATION, token.tokenType() + " " + token.accessToken());
 
             log.info("Feign запрос к: {}", requestTemplate.url());
         };
