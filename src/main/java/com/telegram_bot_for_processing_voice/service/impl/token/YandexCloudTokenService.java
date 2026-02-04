@@ -34,6 +34,7 @@ public class YandexCloudTokenService {
                 userId);
 
         JwtTokenDTO jwtTokenDTO = jwtService.getJwtToken();
+        log.info("jwt token={}", jwtTokenDTO.jwt());
         YandexCloudTokenDTO token = yandexCloudTokenClient.generateToken(jwtTokenDTO).getBody();
         if (token == null) {
             log.error("Ошибка: сервер не вернул токены для пользователя userId={}", userId);

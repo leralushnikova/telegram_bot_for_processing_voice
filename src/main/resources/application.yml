@@ -17,22 +17,6 @@ yandex:
     id:
     service_account_id:
     private_key:
-  cloud:
-    feign:
-      connect-timeout: 10000
-      read-timeout: 30000
-
-feign:
-  client:
-    config:
-      default:  # для всех клиентов
-        connectTimeout: 10000  # 10 секунд
-        readTimeout: 30000     # 30 секунд
-        loggerLevel: full
-      yandex-cloud-client:  # или имя вашего клиента
-        connectTimeout: 15000
-        readTimeout: 60000
-
 
 cache:
   yandexCloudToken: yandexCloudToken
