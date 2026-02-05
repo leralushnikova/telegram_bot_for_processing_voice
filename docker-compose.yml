@@ -3,8 +3,7 @@ version: '3.8'
 services:
   stat_voice_bot:
     build: .
-    ports:
-      - "8080:8080"
+    network_mode: "host"
     env_file:
       - .env
     environment:
