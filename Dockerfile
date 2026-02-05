@@ -11,7 +11,11 @@ RUN mvn clean package -DskipTests
 FROM eclipse-temurin:17-jre
 
 # Устанавливаем шрифты
-RUN apk add --no-cache fontconfig ttf-dejavu
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    fontconfig \
+    fonts-dejavu \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /app/target/*.jar /stat_voice_bot.jar
 
