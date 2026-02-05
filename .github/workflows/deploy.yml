@@ -39,7 +39,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
            name: stat-voice-bot-jar
-        path: target/
+           path: target/
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
