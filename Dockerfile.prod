@@ -1,15 +1,15 @@
-# ЛЕГКИЙ ОБРАЗ ТОЛЬКО ДЛЯ ЗАПУСКА
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:17-jre-slim
 
-# Минимальные шрифты для Apache POI
-RUN apk add --no-cache fontconfig ttf-dejavu
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    fontconfig \
+    fonts-dejavu-core \
+    && rm -rf /var/lib/apt/lists/*
 
-# Non-root пользователь
-RUN addgroup -S app && adduser -S app -G app
+RUN groupadd -r app && useradd -r -g app app
 
 WORKDIR /app
 
-# Копируем УЖЕ СОБРАННЫЙ JAR
 COPY target/*.jar app.jar
 RUN chown app:app app.jar
 
@@ -17,15 +17,11 @@ EXPOSE 8080
 
 USER app
 
-# Агрессивные настройки памяти для 2GB RAM
 ENV JAVA_TOOL_OPTIONS="\
     -XX:+UseContainerSupport \
-    -XX:MaxRAMPercentage=40 \
+    -XX:MaxRAMPercentage=50 \
     -Xss256k \
     -XX:+UseSerialGC \
-    -XX:MinHeapFreeRatio=10 \
-    -XX:MaxHeapFreeRatio=30 \
-    -Djava.awt.headless=true \
-    -Djava.io.tmpdir=/tmp"
+    -Djava.awt.headless=true"
 
 ENTRYPOINT ["java", "-jar", "app.jar"]
