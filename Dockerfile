@@ -8,11 +8,21 @@ COPY checkstyle ./checkstyle
 
 RUN mvn clean package -DskipTests
 
-FROM amazoncorretto:17-alpine
+FROM ubuntu:22.04
 
-RUN apk add --no-cache fontconfig ttf-dejavu freetype
+# Установка пакетов для Ubuntu
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        fontconfig \
+        fonts-dejavu-core \
+        libfreetype6 \
+    && rm -rf /var/lib/apt/lists/*
 
+# Копирование кастомных шрифтов
 COPY fonts/*.ttf /usr/share/fonts/truetype/custom/
+
+# Обновление кэша шрифтов
+RUN fc-cache -f
 
 COPY --from=build /app/target/*.jar /stat_voice_bot.jar
 
