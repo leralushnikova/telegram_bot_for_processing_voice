@@ -1,4 +1,4 @@
-FROM maven:3.9-amazoncorretto-17 AS build
+FROM maven:3.9.9-eclipse-temurin-17 AS build
 
 WORKDIR /app
 
@@ -8,10 +8,10 @@ COPY checkstyle ./checkstyle
 
 RUN mvn clean package -DskipTests
 
-FROM amazoncorretto:17-alpine-jdk
+FROM eclipse-temurin:17-jre
 
 # Устанавливаем шрифты
-#RUN apk add --no-cache fontconfig ttf-dejavu
+RUN apk add --no-cache fontconfig ttf-dejavu
 
 COPY --from=build /app/target/*.jar /stat_voice_bot.jar
 
