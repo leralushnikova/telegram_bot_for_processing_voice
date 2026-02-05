@@ -41,7 +41,8 @@ public class YandexCloudTokenService {
         try {
             token = yandexCloudTokenClient.generateToken(jwtTokenDTO).getBody();
         } catch (FeignException ex) {
-            log.error("Ошибка при запросе токена в YandexSpeechKit: {}, \nstatus: {}, \nresponseBody: {}", ex.request(), ex.status(), ex.responseBody());
+            log.error("Ошибка при запросе токена в YandexSpeechKit: {}, \nstatus: {}, \nresponseBody: {}",
+                    ex.request(), ex.status(), ex.responseBody());
             throw new HttpClientErrorException(HttpStatus.valueOf(ex.status()),
                     "Ошибка при запросе токена в YandexSpeechKit");
         }
