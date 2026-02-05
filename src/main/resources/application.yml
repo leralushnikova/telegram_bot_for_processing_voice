@@ -21,10 +21,6 @@ yandex:
 cache:
   yandexCloudToken: yandexCloudToken
 
-logging:
-  level:
-    feign: debug
-
 
 
 
