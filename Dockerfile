@@ -10,13 +10,11 @@ RUN mvn clean package -DskipTests
 
 FROM debian:12-slim
 
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    openjdk-17-jre-headless \
-    libfreetype6 \
-    fontconfig \
-    fonts-dejavu-core \
-    && rm -rf /var/lib/apt/lists/*
+# Установка шрифтов
+RUN apt-get update && apt-get install -y fontconfig
+
+# Копирование кастомных шрифтов
+COPY fonts/*.ttf /usr/share/fonts/truetype/custom/
 
 COPY --from=build /app/target/*.jar /stat_voice_bot.jar
 
