@@ -8,16 +8,11 @@ COPY checkstyle ./checkstyle
 
 RUN mvn clean package -DskipTests
 
-FROM eclipse-temurin:17-jre
+FROM openjdk:26-ea-17-jdk-slim
 
-# Используем российское зеркало SberCloud
-RUN sed -i 's|http://archive.ubuntu.com/ubuntu/|http://mirror.sbercloud.ru/ubuntu/|g' /etc/apt/sources.list && \
-    sed -i 's|http://security.ubuntu.com/ubuntu/|http://mirror.sbercloud.ru/ubuntu/|g' /etc/apt/sources.list && \
-    apt-get update && \
-    apt-get install -y --no-install-recommends \
-    fontconfig \
-    fonts-dejavu-core \
-    && rm -rf /var/lib/apt/lists/*
+# Этот образ уже содержит базовые шрифты (Debian-based)
+# Если нужны доп шрифты и apt-get работает:
+# RUN apt-get update && apt-get install -y fontconfig fonts-dejavu-core
 
 COPY --from=build /app/target/*.jar /stat_voice_bot.jar
 
