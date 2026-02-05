@@ -10,9 +10,8 @@ RUN mvn clean package -DskipTests
 
 FROM eclipse-temurin:17-jre
 
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends fontconfig \
-    && rm -rf /var/lib/apt/lists/*
+# Теперь apk будет работать
+#RUN apk add --no-cache fontconfig ttf-dejavu
 
 COPY --from=build /app/target/*.jar /stat_voice_bot.jar
 
