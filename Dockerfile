@@ -8,12 +8,11 @@ COPY checkstyle ./checkstyle
 
 RUN mvn clean package -DskipTests
 
-FROM openjdk:26-ea-17-jdk-slim
+FROM debian:12-slim
 
-# Этот образ уже содержит базовые шрифты (Debian-based)
-# Если нужны доп шрифты и apt-get работает:
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
+    openjdk-17-jre-headless \
     libfreetype6 \
     fontconfig \
     fonts-dejavu-core \
