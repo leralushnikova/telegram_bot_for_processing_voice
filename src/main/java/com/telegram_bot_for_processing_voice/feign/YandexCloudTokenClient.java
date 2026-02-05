@@ -18,7 +18,7 @@ public interface YandexCloudTokenClient {
      * Запрос на генерацию токена.
      *
      * @param jwt - jwt токен
-     * @return {@link YandexCloudTokenDTO}, содержащий токены: access
+     * @return возвращает объект YandexCloudTokenDTO
      */
     @PostMapping(
             consumes = MediaType.APPLICATION_JSON_VALUE)

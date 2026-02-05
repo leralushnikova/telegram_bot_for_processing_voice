@@ -7,7 +7,7 @@ import lombok.experimental.UtilityClass;
  */
 @UtilityClass
 public class Constants {
-    public static final int EXPIRES_IN_TOKEN = 3600;
+    public static final int EXPIRES_IN_TOKEN = 39944;
     public static final String COMMAND_START = "/start";
     public static final String COMMAND_HELP = "/help";
     public static final String COMMAND_EXAMPLE = "/example";

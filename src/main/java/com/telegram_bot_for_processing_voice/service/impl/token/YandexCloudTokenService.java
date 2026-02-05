@@ -4,10 +4,13 @@ import com.telegram_bot_for_processing_voice.dto.JwtTokenDTO;
 import com.telegram_bot_for_processing_voice.dto.YandexCloudTokenDTO;
 import com.telegram_bot_for_processing_voice.feign.YandexCloudTokenClient;
 import com.telegram_bot_for_processing_voice.service.JwtService;
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 
 /**
  * Реализация сервиса для работы с токенами платформы YandexCloud.
@@ -34,13 +37,15 @@ public class YandexCloudTokenService {
                 userId);
 
         JwtTokenDTO jwtTokenDTO = jwtService.getJwtToken();
-        log.info("jwt token={}", jwtTokenDTO.jwt());
-        YandexCloudTokenDTO token = yandexCloudTokenClient.generateToken(jwtTokenDTO).getBody();
-        if (token == null) {
-            log.error("Ошибка: сервер не вернул токены для пользователя userId={}", userId);
-            throw new IllegalStateException("Сервер не вернул токены для пользователя: " + userId);
+        log.info("jwtToken={}", jwtTokenDTO);
+        YandexCloudTokenDTO token;
+        try {
+            token = yandexCloudTokenClient.generateToken(jwtTokenDTO).getBody();
+        } catch (FeignException ex) {
+            log.error("Ошибка при запросе токена в YandexSpeechKit", ex);
+            throw new HttpClientErrorException(HttpStatus.valueOf(ex.status()),
+                    "Ошибка при запросе токена в YandexSpeechKit");
         }
-
         log.info("Токен успешно получен для пользователя userId={}", userId);
         return token;
     }

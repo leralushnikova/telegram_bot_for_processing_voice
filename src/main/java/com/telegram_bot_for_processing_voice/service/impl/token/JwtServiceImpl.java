@@ -25,12 +25,12 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.time.Instant;
 import java.util.Date;
 
-import static com.telegram_bot_for_processing_voice.util.Constants.EXPIRES_IN_TOKEN;
-
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class JwtServiceImpl implements JwtService {
+
+    private static final int EXPIRATION_TIME = 3600;
 
     static {
         Security.addProvider(new BouncyCastleProvider());
@@ -49,14 +49,13 @@ public class JwtServiceImpl implements JwtService {
         PemObject privateKeyPem = parsePrivateKeyFromPem();
 
         PrivateKey privateKey = createPrivateKeyFromPem(privateKeyPem);
-
         Instant now = Instant.now();
         String token =  Jwts.builder()
                 .setHeaderParam("kid", jwtProperties.getId())
                 .setIssuer(jwtProperties.getServiceAccountId())
                 .setAudience(url)
                 .setIssuedAt(Date.from(now))
-                .setExpiration(Date.from(now.plusSeconds(EXPIRES_IN_TOKEN)))
+                .setExpiration(Date.from(now.plusSeconds(EXPIRATION_TIME)))
                 .signWith(privateKey, SignatureAlgorithm.PS256)
                 .compact();
 
