@@ -12,7 +12,12 @@ FROM openjdk:26-ea-17-jdk-slim
 
 # Этот образ уже содержит базовые шрифты (Debian-based)
 # Если нужны доп шрифты и apt-get работает:
-# RUN apt-get update && apt-get install -y fontconfig fonts-dejavu-core
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    libfreetype6 \
+    fontconfig \
+    fonts-dejavu-core \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /app/target/*.jar /stat_voice_bot.jar
 
