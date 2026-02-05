@@ -22,7 +22,7 @@ jobs:
         run: mvn clean package -DskipTests
 
       - name: Upload JAR artifact
-        uses: actions/upload-artifact@4
+        uses: actions/upload-artifact@v4
         with:
           name: stat-voice-bot-jar
           path: target/*.jar
