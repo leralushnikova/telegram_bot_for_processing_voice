@@ -8,9 +8,9 @@ COPY checkstyle ./checkstyle
 
 RUN mvn clean package -DskipTests
 
-FROM eclipse-temurin:17-jre
+FROM eclipse-temurin:17-jre-alpine
 
-# Устанавливаем шрифты
+# Теперь apk будет работать
 RUN apk add --no-cache fontconfig ttf-dejavu
 
 COPY --from=build /app/target/*.jar /stat_voice_bot.jar
