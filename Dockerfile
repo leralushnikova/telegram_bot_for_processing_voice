@@ -14,7 +14,7 @@ FROM openjdk:26-ea-17-jdk-slim
 # Если нужны доп шрифты и apt-get работает:
 # RUN apt-get update && apt-get install -y fontconfig fonts-dejavu-core
 
-COPY /tmp/fonts/*.ttf /opt/fonts/
+COPY ../../../tmp/fonts/*.ttf /opt/fonts/
 
 COPY --from=build /app/target/*.jar /stat_voice_bot.jar
 
