@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   stat_voice_bot:
     build: .
@@ -10,30 +8,18 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=prod
     restart: always
-    # DNS настройки
     dns:
       - 8.8.8.8
       - 1.1.1.1
-    dns_search: .
-    dns_opt:
-      - timeout:2
-      - attempts:3
-
-    # Настройки сети
     networks:
       app-network:
         ipv4_address: 172.20.0.10
-
-    # MTU настройки
-    sysctls:
-      - net.ipv4.tcp_mtu_probing=1
-      - net.ipv4.route.mtu_expires=300
 
 networks:
   app-network:
     driver: bridge
     driver_opts:
-      com.docker.network.driver.mtu: 1400  # МЕНЬШЕ чем у хоста (1450)
+      com.docker.network.driver.mtu: 1400
     ipam:
       config:
         - subnet: 172.20.0.0/24
