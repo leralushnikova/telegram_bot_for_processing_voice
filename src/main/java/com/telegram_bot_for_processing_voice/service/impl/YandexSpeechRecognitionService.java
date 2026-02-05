@@ -30,7 +30,7 @@ public class YandexSpeechRecognitionService implements SpeechRecognitionService 
         try {
             yandexCloudDTO = yandexCloudClient.createTextFromVoice(folderId, defaultLanguage, audioData).getBody();
         } catch (FeignException ex) {
-            log.error("Ошибка при запросе информации в YandexSpeechKit: {}", ex.request());
+            log.error("Ошибка при запросе информации в YandexSpeechKit: {}, \nstatus: {}, \nresponseBody: {}", ex.request(), ex.status(), ex.responseBody());
             throw new HttpClientErrorException(HttpStatus.valueOf(ex.status()),
                     "Ошибка при запросе информации в YandexSpeechKit");
         }
