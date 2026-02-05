@@ -8,16 +8,13 @@ COPY checkstyle ./checkstyle
 
 RUN mvn clean package -DskipTests
 
-FROM openjdk:26-ea-17-jdk-slim
+FROM eclipse-temurin:17-jre
 
-# Этот образ уже содержит базовые шрифты (Debian-based)
-# Если нужны доп шрифты и apt-get работает:
-# RUN apt-get update && apt-get install -y fontconfig fonts-dejavu-core
-
-COPY docker-fonts/*.ttf /opt/fonts/
+# Устанавливаем шрифты
+RUN apk add --no-cache fontconfig ttf-dejavu
 
 COPY --from=build /app/target/*.jar /stat_voice_bot.jar
 
 EXPOSE 8080
 
-ENTRYPOINT ["java", "-Djava.awt.fonts=/opt/fonts", "-jar", "/stat_voice_bot.jar"]
+ENTRYPOINT ["java", "-jar", "/stat_voice_bot.jar"]
