@@ -11,7 +11,7 @@ RUN mvn clean package -DskipTests
 FROM amazoncorretto:17-alpine-jdk
 
 # Устанавливаем шрифты
-#RUN apk add --no-cache fontconfig ttf-dejavu
+RUN apk add --no-cache fontconfig ttf-dejavu
 
 COPY --from=build /app/target/*.jar /stat_voice_bot.jar
 
