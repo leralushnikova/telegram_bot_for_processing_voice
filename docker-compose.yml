@@ -8,6 +8,11 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=prod
     restart: always
+    volumes:
+      - /dejavu:/usr/share/fonts/TTF/dejavu:ro
+    tmpfs:
+      - /tmp
+      - /var/cache/fontconfig
     dns:
       - 8.8.8.8
       - 1.1.1.1
