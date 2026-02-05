@@ -8,24 +8,16 @@ COPY checkstyle ./checkstyle
 
 RUN mvn clean package -DskipTests
 
-FROM ubuntu:22.04
+FROM openjdk:26-ea-17-jdk-slim
 
-# Установка пакетов для Ubuntu
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        fontconfig \
-        fonts-dejavu-core \
-        libfreetype6 \
-    && rm -rf /var/lib/apt/lists/*
+# Этот образ уже содержит базовые шрифты (Debian-based)
+# Если нужны доп шрифты и apt-get работает:
+# RUN apt-get update && apt-get install -y fontconfig fonts-dejavu-core
 
-# Копирование кастомных шрифтов
-COPY fonts/*.ttf /usr/share/fonts/truetype/custom/
-
-# Обновление кэша шрифтов
-RUN fc-cache -f
+COPY fonts/*.ttf /opt/fonts/
 
 COPY --from=build /app/target/*.jar /stat_voice_bot.jar
 
 EXPOSE 8080
 
-ENTRYPOINT ["java", "-jar", "/stat_voice_bot.jar"]
+ENTRYPOINT ["java", "-Djava.awt.fonts=/opt/fonts", "-jar", "/stat_voice_bot.jar"]
