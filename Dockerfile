@@ -8,12 +8,10 @@ COPY checkstyle ./checkstyle
 
 RUN mvn clean package -DskipTests
 
-FROM debian:12-slim
+FROM amazoncorretto:17-alpine
 
-# Установка шрифтов
-RUN apt-get update && apt-get install -y fontconfig
+RUN apk add --no-cache fontconfig ttf-dejavu freetype
 
-# Копирование кастомных шрифтов
 COPY fonts/*.ttf /usr/share/fonts/truetype/custom/
 
 COPY --from=build /app/target/*.jar /stat_voice_bot.jar
