@@ -10,22 +10,3 @@ services:
     restart: always
     volumes:
       - /dejavu:/usr/share/fonts/TTF/dejavu:ro
-    tmpfs:
-      - /tmp
-      - /var/cache/fontconfig
-    dns:
-      - 8.8.8.8
-      - 1.1.1.1
-    networks:
-      app-network:
-        ipv4_address: 172.20.0.10
-
-networks:
-  app-network:
-    driver: bridge
-    driver_opts:
-      com.docker.network.driver.mtu: 1400
-    ipam:
-      config:
-        - subnet: 172.20.0.0/24
-          gateway: 172.20.0.1

@@ -34,7 +34,7 @@ public class YandexCloudConfiguration {
 
             requestTemplate.header(AUTHORIZATION, AUTH_TOKEN_TYPE + token.iamToken());
 
-            log.info("Feign запрос к: {}", requestTemplate.url());
+            log.info("Feign запрос к: {}", requestTemplate);
         };
     }
 }

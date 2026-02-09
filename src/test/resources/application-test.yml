@@ -1,0 +1,33 @@
+yandex:
+  auth:
+    id: "test-id"
+    service-account-id: "test-service-account"
+    private-key: |
+      -----BEGIN PRIVATE KEY-----
+      MIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCPCZGbqYMH7MEO
+      OIUxM9ELfCkRJmPM4fyEdpvLHB6x4JZQg11myfXoxBcfdZEMvZ/k8n/upMacsq7y
+      A+4adW5VLDoQaxeRfl9DQcVjFUEXMdCdUOvOktPahEvIsNmx53AbJ3GYTuPtJkL0
+      cHE3+cGW5mqSm+T5tHzEYjDBXRotTKVkISav971oDcWf+W+WESzi1b/QQ+2IjOHW
+      Ho6edC4za8TcY1VRbacOEz5gaBfY4ntjcWuZ0Ct0BTYuG8LAPm97pAJTbjiKKeTH
+      S75kh8NKHUEjkipQCqbnI7LXxlM3Q/Jh37FcdMXpgYRXsdIXucbCizvHnN+i/nc1
+      4oNVa+K7AgMBAAECggEABzo9DMgGcm6QnLbXaBKNtA5chtzROyeKGmlh2uP7WxKV
+      ldDldc2rqszJvFG0+BdWzntAYp8Z2A4hT+JJ9DVN02juMCkxIi1oA959alHHHbRr
+      LZ/KooABy29W4veosFgY7o5SK5eE5dVCmdZaqjDpCsZuySSub72idkvd2c9qBLLg
+      6+zCPOsU30UGuf4FLoJOVqSsbRbzK/RGfrS0yPS4YpY58b/thMRwtPOMaZat6CpI
+      dJKFJOnsJQcmWzq9Pf2oxmM7W/CjhOn1nUkWC3Tz0BMRtTJcKM4GyIthGF8+QA6z
+      hO+apB1XSky5n8mALoaGzLETd9SwobV2zvnrufAGqQKBgQC/hcpaLHzvKiI1zFiN
+      DafadwBZi1DIUzNqse5MAkaQqGWFtcbNG91XJlsphGihgmlg3LSOG6J2WkQ0MX2f
+      HhLt3vmunzN2YidD/16Se7ra+OPBqaShacu0UtnctnRmWvSzKE9+aJrfxNjzGzTO
+      /dpOPODIQS02Vf2vCRXu0vZTGQKBgQC/MR7HIIqhiBp8sSF4d13GxW5Ed1MP9OFL
+      7bXscInQxgAjFyj6GuVtrS2sy160O8mlxCjYbzbw5qG1J1J1Xf5M2MU/yMsNy+bB
+      xZd9lIll8CMOqm6vp+JKAduMUmImbjqjjtKZZ7wa0Qzqt6qWLKRsGPuSao4Vk3/B
+      m8sYe4VS8wKBgFzPqgreykBgK6nkd/kK6A+/YWUDVUduwljvFuqwo5+Qa3pLZ6aX
+      3UBRbxYEe2vhNc3hxoGjNKyj+69LWHQWb9fkGR0dOyQgVqTmCN91pExfFogP/J7Y
+      FQYyrC8AIBJF+5UicLtyV7Mewn+07Hduny8Q42FH7HALZd8/yOguRX5pAoGAHS0Q
+      xlBn92h+qkKZmfmVPO0J+7a93TSAYQbgeTlfPpXIlZJGNYx/MHJ6AuFyDU0GY56A
+      oS6vkqmPSca7ZZ+3W+DEkQxCOFPCXhWaHZbaNM0lfGpzw6h59tM7vrkfsz+lASqd
+      Zr2WzfzS3Mq0ZIBhgwF4+on6Lr64g0IUByNqYBMCgYB3WJwFphov//81s299Ntgm
+      Gn3kCl5d6yCjGXb9ZwT/3/cH2OhVnqO8RFfg0hTNy84Pyr6upHAdYnrRKdOyxp4v
+      672aob+L94R9uUEhymQ94qwbg3tV0BH+IpU1Du/HHwny4AVNin2QcEWzOQ/WueIv
+      kYj/KxQOFN2V7UUAmnR6Ng==
+      -----END PRIVATE KEY-----

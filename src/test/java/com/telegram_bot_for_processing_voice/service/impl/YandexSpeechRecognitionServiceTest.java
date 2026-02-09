@@ -4,6 +4,7 @@ import com.telegram_bot_for_processing_voice.dto.YandexCloudDTO;
 import com.telegram_bot_for_processing_voice.feign.YandexCloudClient;
 import feign.FeignException;
 import org.instancio.Instancio;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -38,6 +39,15 @@ class YandexSpeechRecognitionServiceTest {
     @Mock
     FeignException feignException;
 
+    String folderId = "folderId";
+    String lang = "ru-Ru";
+
+    @BeforeEach
+    void setUp() {
+        ReflectionTestUtils.setField(yandexSpeechRecognitionService, "folderId", folderId);
+        ReflectionTestUtils.setField(yandexSpeechRecognitionService, "defaultLanguage", lang);
+    }
+
     @Test
     @DisplayName("Проверка распознавания речи")
     void recognizeSpeechSuccess() {
@@ -47,11 +57,6 @@ class YandexSpeechRecognitionServiceTest {
 
         byte[] audioData = new byte[1024];
         Arrays.fill(audioData, (byte) 1);
-        String folderId = "folderId";
-        String lang = "ru-Ru";
-
-        ReflectionTestUtils.setField(yandexSpeechRecognitionService, "folderId", folderId);
-        ReflectionTestUtils.setField(yandexSpeechRecognitionService, "defaultLanguage", lang);
 
         when(yandexCloudClient.createTextFromVoice(eq(folderId), eq(lang), same(audioData))).thenReturn(responseEntity);
 
@@ -67,11 +72,6 @@ class YandexSpeechRecognitionServiceTest {
     void recognizeSpeechFailed() {
         byte[] audioData = new byte[1024];
         Arrays.fill(audioData, (byte) 1);
-        String folderId = "folderId";
-        String lang = "ru-Ru";
-
-        ReflectionTestUtils.setField(yandexSpeechRecognitionService, "folderId", folderId);
-        ReflectionTestUtils.setField(yandexSpeechRecognitionService, "defaultLanguage", lang);
 
         when(feignException.status()).thenReturn(400);
         when(yandexCloudClient.createTextFromVoice(eq(folderId), eq(lang), same(audioData))).thenThrow(feignException);

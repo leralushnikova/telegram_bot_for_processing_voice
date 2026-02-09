@@ -19,7 +19,7 @@ import org.springframework.stereotype.Component;
 @NoArgsConstructor
 @Builder
 @ConfigurationProperties(prefix = "yandex.auth")
-@Profile("!test")
+@Profile("test")
 public class JwtProperties {
     private String id;
     private String serviceAccountId;
