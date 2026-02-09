@@ -10,3 +10,11 @@ services:
     restart: always
     volumes:
       - /dejavu:/usr/share/fonts/TTF/dejavu:ro
+    networks:
+      app-network:
+
+networks:
+  app-network:
+    driver: bridge
+    driver_opts:
+      com.docker.network.driver.mtu: 1400
