@@ -25,6 +25,9 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.time.Instant;
 import java.util.Date;
 
+/**
+ * Сервис для генерации JWT токенов.
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
