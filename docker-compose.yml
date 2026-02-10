@@ -10,6 +10,9 @@ services:
     restart: always
     volumes:
       - /dejavu:/usr/share/fonts/TTF/dejavu:ro
+    tmpfs:
+      - /tmp
+      - /var/cache/fontconfig
     networks:
       app-network:
 

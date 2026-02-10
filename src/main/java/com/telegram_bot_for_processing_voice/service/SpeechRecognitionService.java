@@ -6,10 +6,12 @@ package com.telegram_bot_for_processing_voice.service;
 public interface SpeechRecognitionService {
 
     /**
-     * Распознать речь с автоопределением языка.
+     * Распознает речь из аудиофайла, расположенного по-указанному URI.
      *
-     * @param audioData audioData байты аудио файла
-     * @return распознанный текст
+     * @param uri URI аудиофайла в облачном хранилище.
+     * @param voiceDuration длительность аудиофайла в секундах.
+     * @return распознанный текст из аудиофайла или null, если распознавание не удалось
+     * @throws InterruptedException если поток был прерван во время ожидания результата распознавания
      */
-    String recognizeSpeech(byte[] audioData) throws Exception;
+    String getTextFromVoice(String uri, Integer voiceDuration) throws InterruptedException;
 }

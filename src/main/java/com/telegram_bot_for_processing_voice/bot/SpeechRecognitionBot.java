@@ -2,6 +2,7 @@ package com.telegram_bot_for_processing_voice.bot;
 
 import com.telegram_bot_for_processing_voice.model.enums.Action;
 import com.telegram_bot_for_processing_voice.service.ExcelStatsService;
+import com.telegram_bot_for_processing_voice.service.FileService;
 import com.telegram_bot_for_processing_voice.service.SpeechRecognitionService;
 import com.telegram_bot_for_processing_voice.service.StatAnalyzeService;
 import jakarta.annotation.PostConstruct;
@@ -24,11 +25,11 @@ import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
 import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScopeDefault;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -60,9 +61,13 @@ public class SpeechRecognitionBot extends TelegramLongPollingBot {
     @Value("${telegram.bot.token}")
     private String botToken;
 
+    @Value("${yandex.storage.bucket}")
+    private String bucket;
+
     private final SpeechRecognitionService speechService;
     private final StatAnalyzeService statAnalyzeService;
     private final ExcelStatsService excelStatsService;
+    private final FileService fileService;
 
     /**
      * Инициализирует бота после создания бина.
@@ -142,10 +147,15 @@ public class SpeechRecognitionBot extends TelegramLongPollingBot {
 
             sendTextMessage(chatId, "🎤 Скачиваю и обрабатываю голосовое сообщение...");
 
-            byte[] audioBytes = downloadVoiceMessageAsBytes(voice);
+            InputStream inputStream = downloadVoiceMessageAsStream(voice);
+
+            String uri = fileService.uploadFileAndGetUri(inputStream, bucket);
 
             sendTextMessage(chatId, "🔍 Распознаю речь...");
-            String recognizedText = speechService.recognizeSpeech(audioBytes);
+
+            int audioDuration = voice.getDuration();
+
+            String recognizedText = speechService.getTextFromVoice(uri, audioDuration);
 
             handleTextToMap(chatId, recognizedText);
 
@@ -221,31 +231,23 @@ public class SpeechRecognitionBot extends TelegramLongPollingBot {
     }
 
     /**
-     * Преобразует голосовое сообщение в байты данных.
+     * Преобразует голосовое сообщение в поток данных.
      *
      * @param voice объект голосового сообщения Telegram
-     * @return байты данных.
-     * @throws Exception если произошла ошибка при скачивании файла
+     * @return поток данных.
+     * @throws IOException если произошла ошибка при скачивании файла
+     * @throws TelegramApiException если произошла ошибка при скачивании файла
      */
-    private byte[] downloadVoiceMessageAsBytes(Voice voice) throws Exception {
+    private InputStream downloadVoiceMessageAsStream(Voice voice) throws IOException, TelegramApiException {
         GetFile getFile = new GetFile();
         getFile.setFileId(voice.getFileId());
-
         org.telegram.telegrambots.meta.api.objects.File file = execute(getFile);
+
         String fileUrl = file.getFileUrl(getBotToken());
 
-        try (InputStream in = new URL(fileUrl).openStream();
-             ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-
-            byte[] buffer = new byte[BUFFER_SIZE];
-            int bytesRead;
-            while ((bytesRead = in.read(buffer)) != -1) {
-                out.write(buffer, 0, bytesRead);
-            }
-
-            log.info("Голосовое сообщение загружено: {} байт", out.size());
-            return out.toByteArray();
-        }
+        URL url = new URL(fileUrl);
+        URLConnection connection = url.openConnection();
+        return connection.getInputStream();
     }
 
     /**

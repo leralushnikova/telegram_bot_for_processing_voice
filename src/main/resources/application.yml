@@ -1,6 +1,16 @@
 spring:
   application:
     name: telegram_bot_for_processing_voice
+  cloud:
+    aws:
+      credentials:
+        accessKey: ${YANDEX_CLOUD_ACCESSKEY}
+        secretKey: ${YANDEX_CLOUD_SECRETKEY}
+      s3:
+        endpoint: https://storage.yandexcloud.net
+      region:
+        static: ru-central1
+
 telegram:
   bot:
     token:
@@ -9,14 +19,17 @@ telegram:
 yandex:
   iam:
     url: https://iam.api.cloud.yandex.net/iam/v1/tokens
-  stt:
-    url: https://stt.api.cloud.yandex.net
-  folder-id:
+  transcribe:
+    url: https://transcribe.api.cloud.yandex.net
+  operation:
+    url: https://operation.api.cloud.yandex.net
   default-language: ru-RU
   auth:
     id:
     service_account_id:
     private_key:
+  storage:
+    bucket:
 
 cache:
   yandexCloudToken: yandexCloudToken

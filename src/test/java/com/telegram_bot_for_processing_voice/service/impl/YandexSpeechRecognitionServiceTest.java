@@ -1,9 +1,16 @@
 package com.telegram_bot_for_processing_voice.service.impl;
 
-import com.telegram_bot_for_processing_voice.dto.YandexCloudDTO;
-import com.telegram_bot_for_processing_voice.feign.YandexCloudClient;
+import com.telegram_bot_for_processing_voice.dto.OperationDTO;
+import com.telegram_bot_for_processing_voice.dto.RecognitionDTO;
+import com.telegram_bot_for_processing_voice.dto.RecognitionTextDTO;
+import com.telegram_bot_for_processing_voice.dto.response.Alternative;
+import com.telegram_bot_for_processing_voice.dto.response.Chunk;
+import com.telegram_bot_for_processing_voice.dto.response.RecognitionResponse;
+import com.telegram_bot_for_processing_voice.feign.YandexCloudOperationClient;
+import com.telegram_bot_for_processing_voice.feign.YandexCloudTranscribeClient;
 import feign.FeignException;
-import org.instancio.Instancio;
+import feign.Request;
+import feign.Response;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,14 +23,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.HttpClientErrorException;
 
-import java.util.Arrays;
+import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import java.util.HashMap;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.same;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -34,53 +44,112 @@ class YandexSpeechRecognitionServiceTest {
     YandexSpeechRecognitionService yandexSpeechRecognitionService;
 
     @Mock
-    YandexCloudClient yandexCloudClient;
+    private YandexCloudTranscribeClient yandexCloudTranscribeClient;
 
     @Mock
-    FeignException feignException;
+    private YandexCloudOperationClient yandexCloudOperationClient;
 
-    String folderId = "folderId";
-    String lang = "ru-Ru";
+    private final String testUri = "https://storage.yandexcloud.net/bucket/audio.opus";
+    private final String testOperationId = "test-operation-id-123";
+    private final String testLanguage = "ru-RU";
+    private final Integer testDuration = 30;
 
     @BeforeEach
     void setUp() {
-        ReflectionTestUtils.setField(yandexSpeechRecognitionService, "folderId", folderId);
-        ReflectionTestUtils.setField(yandexSpeechRecognitionService, "defaultLanguage", lang);
+        ReflectionTestUtils.setField(yandexSpeechRecognitionService, "defaultLanguage", testLanguage);
     }
 
     @Test
-    @DisplayName("Проверка распознавания речи")
-    void recognizeSpeechSuccess() {
-        YandexCloudDTO yandexCloudDTO = Instancio.create(YandexCloudDTO.class);
-        ResponseEntity<YandexCloudDTO> responseEntity =
-                new ResponseEntity<>(yandexCloudDTO, HttpStatus.OK);
+    @DisplayName("Тест на успешное распознавание речи.")
+    void getTextFromVoice_Success() throws InterruptedException {
+        String expectedText = "привет, как дела?";
 
-        byte[] audioData = new byte[1024];
-        Arrays.fill(audioData, (byte) 1);
+        OperationDTO mockOperationDTO = new OperationDTO();
+        mockOperationDTO.setId(testOperationId);
+        mockOperationDTO.setDone(true);
 
-        when(yandexCloudClient.createTextFromVoice(eq(folderId), eq(lang), same(audioData))).thenReturn(responseEntity);
+        when(yandexCloudTranscribeClient.getOperation(any(RecognitionDTO.class)))
+                .thenReturn(ResponseEntity.ok(mockOperationDTO));
 
-        String result = yandexSpeechRecognitionService.recognizeSpeech(audioData);
+        Alternative alternative = new Alternative();
+        alternative.setText(expectedText);
 
-        assertThat(result).isEqualTo(yandexCloudDTO.result());
+        Chunk chunk = new Chunk();
+        chunk.setAlternatives(Collections.singletonList(alternative));
 
-        verify(yandexCloudClient).createTextFromVoice(eq(folderId), eq(lang), same(audioData));
+        RecognitionResponse recognitionResponse = new RecognitionResponse();
+        recognitionResponse.setChunks(Collections.singletonList(chunk));
+
+        RecognitionTextDTO mockRecognitionTextDTO = new RecognitionTextDTO();
+        mockRecognitionTextDTO.setDone(true);
+        mockRecognitionTextDTO.setResponse(recognitionResponse);
+
+        when(yandexCloudOperationClient.getResultText(testOperationId))
+                .thenReturn(ResponseEntity.ok(mockRecognitionTextDTO));
+
+        String actualText = yandexSpeechRecognitionService.getTextFromVoice(testUri, testDuration);
+
+        assertNotNull(actualText, "Распознанный текст не должен быть null");
+        assertEquals(expectedText, actualText, "Текст должен совпадать с ожидаемым");
+
+        verify(yandexCloudTranscribeClient)
+                .getOperation(any(RecognitionDTO.class));
+        verify(yandexCloudOperationClient)
+                .getResultText(testOperationId);
+
+        verify(yandexCloudTranscribeClient).getOperation(argThat(recognitionDTO ->
+                recognitionDTO.getAudio() != null &&
+                        testUri.equals(recognitionDTO.getAudio().getUri()) &&
+                        recognitionDTO.getConfig() != null &&
+                        recognitionDTO.getConfig().getSpecification() != null &&
+                        testLanguage.equals(recognitionDTO.getConfig().getSpecification().getLanguageCode())
+        ));
     }
 
     @Test
-    @DisplayName("Проверка распознавания речи")
-    void recognizeSpeechFailed() {
-        byte[] audioData = new byte[1024];
-        Arrays.fill(audioData, (byte) 1);
+    @DisplayName("Тест на обработку ошибки 404 при получении результата.")
+    void getTextFromVoice_FeignException(){
+        OperationDTO mockOperationDTO = new OperationDTO();
+        mockOperationDTO.setId(testOperationId);
+        mockOperationDTO.setDone(true);
 
-        when(feignException.status()).thenReturn(400);
-        when(yandexCloudClient.createTextFromVoice(eq(folderId), eq(lang), same(audioData))).thenThrow(feignException);
+        FeignException feignException = FeignException.errorStatus(
+                "testMethod",
+                Response.builder()
+                        .status(404)
+                        .reason("Not Found")
+                        .headers(new HashMap<>())
+                        .body("{\"error\":\"Operation not found\"}", StandardCharsets.UTF_8)
+                        .request(Request.create(
+                                Request.HttpMethod.GET,
+                                "/operations/" + testOperationId,
+                                new HashMap<>(),
+                                null,
+                                StandardCharsets.UTF_8,
+                                null
+                        ))
+                        .build()
+        );
 
-        assertThatThrownBy(() -> yandexSpeechRecognitionService.recognizeSpeech(audioData))
-                .isInstanceOf(HttpClientErrorException.class)
-                .hasMessage("400 Ошибка при запросе информации в YandexSpeechKit");
+        when(yandexCloudTranscribeClient.getOperation(any(RecognitionDTO.class)))
+                .thenReturn(ResponseEntity.ok(mockOperationDTO));
 
-        verify(yandexCloudClient).createTextFromVoice(eq(folderId), eq(lang), same(audioData));
-        verifyNoMoreInteractions(yandexCloudClient);
+        when(yandexCloudOperationClient.getResultText(testOperationId))
+                .thenThrow(feignException);
+
+        HttpClientErrorException exception = assertThrows(
+                HttpClientErrorException.class,
+                () -> yandexSpeechRecognitionService.getTextFromVoice(testUri, testDuration),
+                "Метод должен бросить HttpClientErrorException при ошибке Feign"
+        );
+
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+        assertTrue(exception.getMessage().contains("YandexCloud"));
+
+        verify(yandexCloudTranscribeClient)
+                .getOperation(any(RecognitionDTO.class));
+        verify(yandexCloudOperationClient)
+                .getResultText(testOperationId);
     }
+
 }
