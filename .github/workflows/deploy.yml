@@ -32,10 +32,12 @@ jobs:
             # Создаем .env
             cat > .env << EOF
             TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
-            YANDEX_FOLDER_ID=${{ secrets.YANDEX_FOLDER_ID }}
             YANDEX_AUTH_ID=${{ secrets.YANDEX_AUTH_ID }}
             YANDEX_AUTH_SERVICE_ACCOUNT_ID=${{ secrets.YANDEX_AUTH_SERVICE_ACCOUNT_ID }}
             YANDEX_AUTH_PRIVATE_KEY=${{ secrets.YANDEX_AUTH_PRIVATE_KEY }}
+            YANDEX_CLOUD_ACCESSKEY=${{ secrets.YANDEX_CLOUD_ACCESSKEY }}
+            YANDEX_CLOUD_SECRETKEY=${{ secrets.YANDEX_CLOUD_SECRETKEY }}
+            YANDEX_STORAGE_BUCKET=${{ secrets.YANDEX_STORAGE_BUCKET }}
             EOF
             
             #  Удаляем ВСЕ Docker артефакты
