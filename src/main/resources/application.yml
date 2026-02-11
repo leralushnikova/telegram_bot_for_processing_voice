@@ -36,7 +36,7 @@ cache:
 
 audio:
   ffmpeg:
-    path: ffmpeg
+    path: /usr/local/bin/ffmpeg
 
   conversion:
     bitrate: 16k

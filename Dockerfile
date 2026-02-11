@@ -10,14 +10,6 @@ RUN mvn clean package -DskipTests
 
 FROM eclipse-temurin:17-jre
 
-# Устанавливаем ffmpeg для конвертации аудио
-RUN apt-get update && \
-    apt-get install -y curl ffmpeg && \
-    rm -rf /var/lib/apt/lists/*
-
-# Проверяем установку ffmpeg
-RUN ffmpeg -version
-
 COPY --from=build /app/target/*.jar /stat_voice_bot.jar
 
 EXPOSE 8080

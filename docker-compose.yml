@@ -7,9 +7,11 @@ services:
       - .env
     environment:
       - SPRING_PROFILES_ACTIVE=prod
+      - AUDIO_FFMPEG_PATH=/usr/local/bin/ffmpeg
     restart: always
     volumes:
       - /dejavu:/usr/share/fonts/TTF/dejavu:ro
+      - - /ffmpeg:/usr/local/bin:ro
     tmpfs:
       - /tmp
       - /var/cache/fontconfig
