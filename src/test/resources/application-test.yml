@@ -31,3 +31,14 @@ yandex:
       672aob+L94R9uUEhymQ94qwbg3tV0BH+IpU1Du/HHwny4AVNin2QcEWzOQ/WueIv
       kYj/KxQOFN2V7UUAmnR6Ng==
       -----END PRIVATE KEY-----
+
+spring:
+  cloud:
+    aws:
+      credentials:
+        accessKey:
+        secretKey:
+      s3:
+        endpoint:
+      region:
+        static:

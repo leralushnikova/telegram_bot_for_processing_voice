@@ -34,6 +34,20 @@ yandex:
 cache:
   yandexCloudToken: yandexCloudToken
 
+audio:
+  ffmpeg:
+    path: ffmpeg
+
+  conversion:
+    bitrate: 16k
+    samplerate: 16000
+    channels: 1
+    codec: libopus
+
+  limits:
+    max-size-mb: 50
+    max-duration-min: 40
+
 
 
 

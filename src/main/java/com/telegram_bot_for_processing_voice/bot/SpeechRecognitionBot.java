@@ -17,6 +17,8 @@ import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
 import org.telegram.telegrambots.meta.api.methods.send.SendChatAction;
 import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.Audio;
+import org.telegram.telegrambots.meta.api.objects.Document;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -28,6 +30,7 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
@@ -39,6 +42,10 @@ import static com.telegram_bot_for_processing_voice.util.Constants.COMMAND_HELP;
 import static com.telegram_bot_for_processing_voice.util.Constants.COMMAND_START;
 import static com.telegram_bot_for_processing_voice.util.Constants.EXAMPLE_MESSAGE;
 import static com.telegram_bot_for_processing_voice.util.Constants.HELP_MESSAGE;
+import static com.telegram_bot_for_processing_voice.util.Constants.SUPPORTED_AUDIO_EXTENSIONS;
+import static com.telegram_bot_for_processing_voice.util.Constants.SUPPORTED_MIME_TYPES;
+import static com.telegram_bot_for_processing_voice.util.Constants.TEXT_MESSAGE;
+import static com.telegram_bot_for_processing_voice.util.Constants.UNSUPPORTED_FORMAT_MESSAGE;
 import static com.telegram_bot_for_processing_voice.util.Constants.WELCOME_MESSAGE;
 
 /**
@@ -50,10 +57,10 @@ import static com.telegram_bot_for_processing_voice.util.Constants.WELCOME_MESSA
 @RequiredArgsConstructor
 public class SpeechRecognitionBot extends TelegramLongPollingBot {
 
-    /**
-     * 4KB - оптимальный размер буфера.
-     */
-    private static final int BUFFER_SIZE = 4096;
+    private static final long MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024;
+    private static final int MAX_DURATION_SECONDS = 40 * 60;
+    private static final int CONNECT_TIMEOUT_MS = 30_000;
+    private static final int READ_TIMEOUT_MS = 60_000;
 
     @Value("${telegram.bot.username}")
     private String botUsername;
@@ -121,15 +128,21 @@ public class SpeechRecognitionBot extends TelegramLongPollingBot {
             } else if (message.hasVoice()) {
                 handleVoiceMessage(message);
                 messageHandled = true;
+            } else if (message.hasAudio()) {
+                handleAudioFileMessage(message);
+                messageHandled = true;
+            } else if (message.hasDocument()) {
+                handleDocumentMessage(message);
+                messageHandled = true;
             }
 
             if (!messageHandled) {
-                sendTextMessage(chatId, "Отправьте мне голосовое или обычное сообщение для распознавания речи 🎤");
+                sendTextMessage(chatId, TEXT_MESSAGE);
             }
 
         } catch (Exception e) {
             log.error("Ошибка обработки сообщения", e);
-            sendTextMessage(chatId, "❌ Произошла ошибка. Попробуйте еще раз.");
+            sendTextMessage(chatId, "❌ Ошибка: " + e.getMessage());
         }
     }
 
@@ -144,17 +157,15 @@ public class SpeechRecognitionBot extends TelegramLongPollingBot {
 
         try {
             sendTypingAction(chatId);
+            sendTextMessage(chatId, "🎤 Скачиваю голосовое сообщение...");
 
-            sendTextMessage(chatId, "🎤 Скачиваю и обрабатываю голосовое сообщение...");
-
-            InputStream inputStream = downloadVoiceMessageAsStream(voice);
+            InputStream inputStream = downloadVoiceMessageAsStream(voice.getFileId());
 
             String uri = fileService.uploadFileAndGetUri(inputStream, bucket);
 
             sendTextMessage(chatId, "🔍 Распознаю речь...");
 
             int audioDuration = voice.getDuration();
-
             String recognizedText = speechService.getTextFromVoice(uri, audioDuration);
 
             handleTextToMap(chatId, recognizedText);
@@ -162,6 +173,113 @@ public class SpeechRecognitionBot extends TelegramLongPollingBot {
         } catch (Exception e) {
             log.error("Ошибка обработки голосового сообщения", e);
             sendTextMessage(chatId, "❌ Ошибка при обработке голосового сообщения: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Обрабатывает аудио файл от пользователя.
+     *
+     * @param message объект сообщения Telegram с голосовым сообщением
+     */
+    private void handleAudioFileMessage(Message message) {
+        Long chatId = message.getChatId();
+        Audio audio = message.getAudio();
+
+        try {
+            sendTypingAction(chatId);
+            sendTextMessage(chatId, "🎵 Скачиваю аудиофайл...");
+
+            String fileName = audio.getFileName();
+            String mimeType = audio.getMimeType();
+            Integer duration = audio.getDuration();
+
+            log.info("Получен аудиофайл: {} (MIME: {}, длительность: {} сек)",
+                    fileName, mimeType, duration);
+
+            if (!isSupportedAudioFormat(fileName, mimeType)) {
+                sendUnsupportedFormatMessage(chatId, fileName);
+                return;
+            }
+
+            Long fileSize = audio.getFileSize();
+            if (fileSize != null && fileSize > MAX_FILE_SIZE_BYTES) {
+                sendTextMessage(chatId,
+                        String.format("❌ Файл слишком большой (%.1f MB). Максимальный размер: 50 MB",
+                                fileSize / (1024.0 * 1024.0)));
+                return;
+            }
+
+            if (duration != null && duration > MAX_DURATION_SECONDS) {
+                sendTextMessage(chatId,
+                        String.format("❌ Аудио слишком длинное (%d минут). Максимальная длительность: 40 минут",
+                                duration / 60));
+                return;
+            }
+
+            InputStream inputStream = downloadFileAudioAsStream(audio.getFileId());
+
+            sendTextMessage(chatId, "🔄 Конвертирую в формат для распознавания...");
+
+            String uri = fileService.uploadFileAndGetUri(inputStream, bucket, fileName);
+
+            sendTextMessage(chatId, "🔍 Распознаю речь...");
+
+            String recognizedText = speechService.getTextFromVoice(uri, duration);
+            handleTextToMap(chatId, recognizedText);
+
+        } catch (Exception e) {
+            log.error("Ошибка обработки аудиофайла", e);
+            sendTextMessage(chatId, "❌ Ошибка при обработке аудиофайла: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Обрабатывает документ (возможно, аудио файл).
+     *
+     * @param message объект сообщения Telegram с голосовым сообщением
+     */
+    private void handleDocumentMessage(Message message) {
+        Long chatId = message.getChatId();
+        Document document = message.getDocument();
+
+        try {
+            sendTypingAction(chatId);
+            sendTextMessage(chatId, "📄 Проверяю документ...");
+
+            String fileName = document.getFileName();
+            String mimeType = document.getMimeType();
+            Long fileSize = document.getFileSize();
+
+            log.info("Получен документ: {} (MIME: {}, размер: {} bytes)",
+                    fileName, mimeType, fileSize);
+
+            if (!isSupportedAudioFormat(fileName, mimeType)) {
+                sendTextMessage(chatId,
+                        "❌ Это не аудиофайл. Пожалуйста, отправьте MP3, WAV, FLAC или другой аудиофайл.");
+                return;
+            }
+
+            if (fileSize != null && fileSize > MAX_FILE_SIZE_BYTES) {
+                sendTextMessage(chatId,
+                        String.format("❌ Файл слишком большой (%.1f MB). Максимальный размер: 50 MB",
+                                fileSize / (1024.0 * 1024.0)));
+                return;
+            }
+
+            InputStream inputStream = downloadFileAsStream(document.getFileId());
+
+            sendTextMessage(chatId, "🔄 Обрабатываю аудиофайл...");
+
+            String uri = fileService.uploadFileAndGetUri(inputStream, bucket, fileName);
+
+            sendTextMessage(chatId, "🔍 Распознаю речь...");
+
+            String recognizedText = speechService.getTextFromVoice(uri, null);
+            handleTextToMap(chatId, recognizedText);
+
+        } catch (Exception e) {
+            log.error("Ошибка обработки документа", e);
+            sendTextMessage(chatId, "❌ Ошибка при обработке документа: " + e.getMessage());
         }
     }
 
@@ -233,20 +351,44 @@ public class SpeechRecognitionBot extends TelegramLongPollingBot {
     /**
      * Преобразует голосовое сообщение в поток данных.
      *
-     * @param voice объект голосового сообщения Telegram
+     * @param fileId идентификатор файла
      * @return поток данных.
      * @throws IOException если произошла ошибка при скачивании файла
      * @throws TelegramApiException если произошла ошибка при скачивании файла
      */
-    private InputStream downloadVoiceMessageAsStream(Voice voice) throws IOException, TelegramApiException {
+    private InputStream downloadVoiceMessageAsStream(String fileId) throws IOException, TelegramApiException {
         GetFile getFile = new GetFile();
-        getFile.setFileId(voice.getFileId());
+        getFile.setFileId(fileId);
         org.telegram.telegrambots.meta.api.objects.File file = execute(getFile);
 
         String fileUrl = file.getFileUrl(getBotToken());
 
         URL url = new URL(fileUrl);
         URLConnection connection = url.openConnection();
+        return connection.getInputStream();
+    }
+
+    /**
+     * Преобразует аудио сообщение в поток данных.
+     *
+     * @param fileId идентификатор файла
+     * @return поток данных.
+     * @throws IOException если произошла ошибка при скачивании файла
+     * @throws TelegramApiException если произошла ошибка при скачивании файла
+     */
+    private InputStream downloadFileAudioAsStream(String fileId) throws IOException, TelegramApiException {
+        GetFile getFile = new GetFile();
+        getFile.setFileId(fileId);
+        org.telegram.telegrambots.meta.api.objects.File file = execute(getFile);
+
+        String fileUrl = file.getFileUrl(getBotToken());
+        log.debug("Скачиваю файл: {}", fileUrl);
+
+        URL url = new URL(fileUrl);
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setConnectTimeout(CONNECT_TIMEOUT_MS);
+        connection.setReadTimeout(READ_TIMEOUT_MS);
+
         return connection.getInputStream();
     }
 
@@ -275,6 +417,48 @@ public class SpeechRecognitionBot extends TelegramLongPollingBot {
             default:
                 sendTextMessage(chatId, "Неизвестная команда. Используйте " + COMMAND_HELP + "  для списка команд.");
         }
+    }
+
+    /**
+     * Проверяет, поддерживается ли аудиоформат.
+     *
+     * @param fileName имя файла
+     * @param mimeType тип файла
+     * @return true, если такое расширение файла поддерживается
+     */
+    private boolean isSupportedAudioFormat(String fileName, String mimeType) {
+        if (fileName != null) {
+            String extension = getFileExtension(fileName).toLowerCase();
+            if (SUPPORTED_AUDIO_EXTENSIONS.contains(extension)) {
+                return true;
+            }
+        }
+
+        return mimeType != null && SUPPORTED_MIME_TYPES.contains(mimeType.toLowerCase());
+    }
+
+    /**
+     * Извлекает расширение файла.
+     *
+     * @param fileName имя файла
+     * @return возвращает расширение файла
+     */
+    private String getFileExtension(String fileName) {
+        if (fileName == null || !fileName.contains(".")) {
+            return "";
+        }
+        return fileName.substring(fileName.lastIndexOf(".") + 1);
+    }
+
+    /**
+     * Отправляет сообщение о неподдерживаемом формате.
+     *
+     * @param chatId   идентификатор чата в Telegram
+     * @param fileName имя файла
+     */
+    private void sendUnsupportedFormatMessage(Long chatId, String fileName) {
+        String unsupportedFormatMessage  = String.format(UNSUPPORTED_FORMAT_MESSAGE, fileName);
+        sendTextMessage(chatId, unsupportedFormatMessage);
     }
 
     /**

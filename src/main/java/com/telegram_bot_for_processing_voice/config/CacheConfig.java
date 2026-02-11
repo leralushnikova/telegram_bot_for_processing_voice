@@ -10,8 +10,6 @@ import org.springframework.context.annotation.Profile;
 
 import java.util.concurrent.TimeUnit;
 
-import static com.telegram_bot_for_processing_voice.util.Constants.EXPIRES_IN_TOKEN;
-
 /**
  * Конфигурационный класс для настройки кэширования в приложении.
  */
@@ -19,6 +17,8 @@ import static com.telegram_bot_for_processing_voice.util.Constants.EXPIRES_IN_TO
 @EnableCaching
 @Profile("!test")
 public class CacheConfig {
+
+    public static final int EXPIRES_IN_TOKEN = 39944;
 
     @Value("${cache.yandexCloudToken}")
     private String yandexCloudToken;

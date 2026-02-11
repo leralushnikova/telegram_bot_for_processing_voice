@@ -4,6 +4,7 @@ import com.telegram_bot_for_processing_voice.bot.SpeechRecognitionBot;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
@@ -13,6 +14,7 @@ import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
  */
 @Slf4j
 @Configuration
+@Profile("!test")
 public class BotConfig {
 
     /**
