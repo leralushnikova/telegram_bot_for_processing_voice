@@ -58,7 +58,7 @@ import static com.telegram_bot_for_processing_voice.util.Constants.WELCOME_MESSA
 public class SpeechRecognitionBot extends TelegramLongPollingBot {
 
     private static final long MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024;
-    private static final int MAX_DURATION_SECONDS = 40 * 60;
+    private static final int MAX_DURATION_SECONDS = 45 * 60;
     private static final int CONNECT_TIMEOUT_MS = 30_000;
     private static final int READ_TIMEOUT_MS = 60_000;
 
