@@ -11,7 +11,7 @@ services:
     restart: always
     volumes:
       - /dejavu:/usr/share/fonts/TTF/dejavu:ro
-      - - /ffmpeg:/usr/local/bin:ro
+      - /ffmpeg:/usr/local/bin:ro
     tmpfs:
       - /tmp
       - /var/cache/fontconfig
