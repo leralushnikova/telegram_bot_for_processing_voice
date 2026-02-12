@@ -26,6 +26,8 @@ import org.springframework.web.client.HttpClientErrorException;
 public class YandexSpeechRecognitionService implements SpeechRecognitionService {
 
     private static final long SAFETY_MARGIN_MS = 10_000L;
+    private static final long POLLING_INTERVAL_MS = 2_000L;
+    private static final int MAX_ATTEMPTS = 30;
 
     @Value("${yandex.default-language}")
     private String defaultLanguage;
@@ -34,25 +36,67 @@ public class YandexSpeechRecognitionService implements SpeechRecognitionService 
     private final YandexCloudOperationClient yandexCloudOperationClient;
 
     @Override
-    public String getTextFromVoice(String uri, Integer voiceDuration) throws InterruptedException {
+    public String getTextFromVoice(String uri, Integer voiceDuration) {
         String operationId = getOperationID(uri);
+
+        if (operationId == null || operationId.isBlank()) {
+            throw new IllegalStateException("Не удалось получить operationId");
+        }
 
         long baseSleepMs = (long) (voiceDuration / 60) * 10 * 1000 + SAFETY_MARGIN_MS;
 
-        Thread.sleep(baseSleepMs);
-
-        RecognitionTextDTO recognitionTextDTO;
         try {
-            recognitionTextDTO = yandexCloudOperationClient.getResultText(operationId).getBody();
-        } catch (FeignException ex) {
-            log.error("Ошибка при запросе информации в YandexCloud status: {}, message: {}",
-                    ex.status(), ex.getMessage());
-            throw new HttpClientErrorException(HttpStatus.valueOf(ex.status()),
-                    "Ошибка при запросе информации в YandexCloud");
+            log.debug("🎤 Аудио {} сек, первичное ожидание: {} мс ({} сек + 10 сек)",
+                    voiceDuration, baseSleepMs, voiceDuration / 60 * 10);
+            Thread.sleep(baseSleepMs);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Прерывание первичного ожидания", e);
         }
-        return recognitionTextDTO.extractText();
+
+        int attempt = 0;
+
+        while (attempt++ < MAX_ATTEMPTS) {
+
+            try {
+                RecognitionTextDTO recognitionTextDTO = yandexCloudOperationClient.getResultText(operationId).getBody();
+
+                if (recognitionTextDTO == null) {
+                    log.debug("Получен null ответ для operationId: {}", operationId);
+                    Thread.sleep(POLLING_INTERVAL_MS);
+                    continue;
+                }
+
+                if (recognitionTextDTO.getDone()) {
+                    return recognitionTextDTO.extractText();
+                }
+
+                log.debug("🔄 Попытка {}/{}", attempt, MAX_ATTEMPTS);
+                Thread.sleep(POLLING_INTERVAL_MS);
+
+            } catch (FeignException ex) {
+                log.error("Ошибка при запросе информации о получении данных расшифровки " +
+                                "в YandexCloud status: {}, message: {}",
+                        ex.status(), ex.getMessage());
+                throw new HttpClientErrorException(HttpStatus.valueOf(ex.status()),
+                        "Ошибка при запросе информации о получении данных расшифровки в YandexCloud");
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException("Прерывание ожидания результата", e);
+            }
+        }
+
+        throw new RuntimeException(String.format(
+                "❌ Не удалось распознать за %d попыток. Аудио: %d сек",
+                MAX_ATTEMPTS, voiceDuration));
     }
 
+    /**
+     * Обработка аудиофайла.
+     *
+     * @param uri ссылка на аудио файл.
+     * @return возвращает идентификатор операции распознавания.
+     */
     private String getOperationID(String uri) {
         RecognitionDTO request = RecognitionDTO.builder()
                 .config(RecognitionConfig.builder()
@@ -65,15 +109,21 @@ public class YandexSpeechRecognitionService implements SpeechRecognitionService 
                         .build())
                 .build();
 
-        OperationDTO operationDTO;
         try {
-            operationDTO = yandexCloudTranscribeClient.getOperation(request).getBody();
+            OperationDTO operationDTO = yandexCloudTranscribeClient.getOperation(request).getBody();
+
+            if (operationDTO == null) {
+                log.error("Получен null OperationDTO от YandexCloud");
+                throw new HttpClientErrorException(HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Пустое тело ответа от YandexCloud");
+            }
+
+            return operationDTO.getId();
         } catch (FeignException ex) {
-            log.error("Ошибка при запросе информации в YandexCloud status: {}, message: {}",
+            log.error("Ошибка при запросе операции в YandexCloud status: {}, message: {}",
                     ex.status(), ex.getMessage());
             throw new HttpClientErrorException(HttpStatus.valueOf(ex.status()),
-                    "Ошибка при запросе информации в YandexCloud");
+                    "Ошибка при запросе операции в YandexCloud");
         }
-        return operationDTO.getId();
     }
 }

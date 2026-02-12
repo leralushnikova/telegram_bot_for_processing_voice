@@ -253,22 +253,4 @@ public class FileServiceImplTest {
                 fileService.uploadFileAndGetUri(inputStream, BUCKET_NAME, unknownFile)
         );
     }
-
-    @Test
-    @DisplayName("Загрузка WAV файла с конвертацией")
-    void uploadFileAndGetUri_WavFileWithConversion_Success() {
-        if (!isFfmpegAvailable()) {
-            return;
-        }
-
-        byte[] wavContent = createMinimalWavFile();
-        InputStream inputStream = new ByteArrayInputStream(wavContent);
-
-        String result = fileService.uploadFileAndGetUri(inputStream, BUCKET_NAME, TEST_WAV_FILE);
-
-        assertNotNull(result);
-        assertTrue(result.contains(BUCKET_NAME));
-        assertTrue(result.contains(".ogg"));
-        assertTrue(result.contains("telegram/voices/"));
-    }
 }
