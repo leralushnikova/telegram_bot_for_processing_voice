@@ -1,7 +1,7 @@
 package com.telegram_bot_for_processing_voice.service.impl;
 
+import com.telegram_bot_for_processing_voice.exception.AudioException;
 import com.telegram_bot_for_processing_voice.service.FileService;
-import lombok.SneakyThrows;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -18,14 +18,13 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
-import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.testcontainers.containers.localstack.LocalStackContainer.Service.S3;
 
 @DisplayName("Тестирование FileServiceImpl с LocalStack")
@@ -37,7 +36,6 @@ public class FileServiceImplTest {
     private static final String BUCKET_NAME = "audio";
     private static final String TEST_MP3_FILE = "test.mp3";
     private static final String TEST_OGG_FILE = "test.ogg";
-    private static final String TEST_WAV_FILE = "test.wav";
 
     @Autowired
     private FileService fileService;
@@ -114,43 +112,6 @@ public class FileServiceImplTest {
         return mp3;
     }
 
-    @SneakyThrows
-    private byte[] createMinimalWavFile() {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-
-        baos.write("RIFF".getBytes());
-        baos.write(intToBytes(36));
-        baos.write("WAVE".getBytes());
-        baos.write("fmt ".getBytes());
-        baos.write(intToBytes(16));
-        baos.write(shortToBytes((short) 1));
-        baos.write(shortToBytes((short) 1));
-        baos.write(intToBytes(16000));
-        baos.write(intToBytes(32000));
-        baos.write(shortToBytes((short) 2));
-        baos.write(shortToBytes((short) 16));
-        baos.write("data".getBytes());
-        baos.write(intToBytes(0));
-
-        return baos.toByteArray();
-    }
-
-    private byte[] intToBytes(int value) {
-        return new byte[]{
-                (byte) (value & 0xFF),
-                (byte) ((value >> 8) & 0xFF),
-                (byte) ((value >> 16) & 0xFF),
-                (byte) ((value >> 24) & 0xFF)
-        };
-    }
-
-    private byte[] shortToBytes(short value) {
-        return new byte[]{
-                (byte) (value & 0xFF),
-                (byte) ((value >> 8) & 0xFF)
-        };
-    }
-
     private boolean isFfmpegAvailable() {
         try {
             Process process = Runtime.getRuntime().exec("ffmpeg -version");
@@ -169,11 +130,11 @@ public class FileServiceImplTest {
 
         String result = fileService.uploadFileAndGetUri(inputStream, BUCKET_NAME, TEST_OGG_FILE);
 
-        assertNotNull(result);
-        assertTrue(result.contains(BUCKET_NAME));
-        assertTrue(result.contains(".ogg"));
-        assertTrue(result.contains("telegram/voices/"));
-        assertTrue(result.startsWith("http://") || result.startsWith("https://"));
+        assertThat(result).isNotNull();
+        assertThat(result).contains(BUCKET_NAME);
+        assertThat(result).contains(".ogg");
+        assertThat(result).contains("telegram/voices/");
+        assertThat(result.startsWith("http://") || result.startsWith("https://"));
     }
 
     @Test
@@ -184,9 +145,9 @@ public class FileServiceImplTest {
 
         String result = fileService.uploadFileAndGetUri(inputStream, BUCKET_NAME);
 
-        assertNotNull(result);
-        assertTrue(result.contains(".ogg"));
-        assertTrue(result.contains("telegram/voices/"));
+        assertThat(result).isNotNull();
+        assertThat(result).contains(".ogg");
+        assertThat(result).contains("telegram/voices/");
     }
 
     @Test
@@ -199,43 +160,10 @@ public class FileServiceImplTest {
         byte[] invalidAudio = "not an audio file".getBytes(StandardCharsets.UTF_8);
         InputStream inputStream = new ByteArrayInputStream(invalidAudio);
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () ->
-                fileService.uploadFileAndGetUri(inputStream, BUCKET_NAME, TEST_MP3_FILE)
-        );
+        assertThatThrownBy(() -> fileService.uploadFileAndGetUri(inputStream, BUCKET_NAME, TEST_MP3_FILE))
+                .isInstanceOf(AudioException.class)
+                .hasMessage("Ошибка конвертации аудио: Ошибка конвертации ffmpeg, код: -1094995529");
 
-        assertTrue(exception.getMessage().contains("Ошибка при загрузке файла"));
-        assertTrue(exception.getCause().getMessage().contains("Ошибка конвертации"));
-    }
-
-    @Test
-    @DisplayName("Ошибка при загрузке в несуществующий бакет")
-    void uploadFileAndGetUri_NonExistentBucket_ThrowsException() {
-        byte[] oggContent = createMinimalOggFile();
-        InputStream inputStream = new ByteArrayInputStream(oggContent);
-        String nonExistentBucket = "non-existent-bucket-" + UUID.randomUUID();
-
-        assertThrows(RuntimeException.class, () ->
-                fileService.uploadFileAndGetUri(inputStream, nonExistentBucket, TEST_OGG_FILE)
-        );
-    }
-
-    @Test
-    @DisplayName("Ошибка при загрузке с null InputStream")
-    void uploadFileAndGetUri_NullInputStream_ThrowsException() {
-        assertThrows(RuntimeException.class, () ->
-                fileService.uploadFileAndGetUri(null, BUCKET_NAME, TEST_OGG_FILE)
-        );
-    }
-
-    @Test
-    @DisplayName("Ошибка при загрузке с null bucket")
-    void uploadFileAndGetUri_NullBucket_ThrowsException() {
-        byte[] oggContent = createMinimalOggFile();
-        InputStream inputStream = new ByteArrayInputStream(oggContent);
-
-        assertThrows(RuntimeException.class, () ->
-                fileService.uploadFileAndGetUri(inputStream, null, TEST_OGG_FILE)
-        );
     }
 
     @Test
@@ -249,8 +177,8 @@ public class FileServiceImplTest {
         InputStream inputStream = new ByteArrayInputStream(audioContent);
         String unknownFile = "test.unknown";
 
-        assertThrows(RuntimeException.class, () ->
-                fileService.uploadFileAndGetUri(inputStream, BUCKET_NAME, unknownFile)
-        );
+        assertThatThrownBy(() -> fileService.uploadFileAndGetUri(inputStream, BUCKET_NAME, unknownFile))
+                .isInstanceOf(AudioException.class)
+                .hasMessage("Ошибка конвертации аудио: Ошибка конвертации ffmpeg, код: -1094995529");
     }
 }

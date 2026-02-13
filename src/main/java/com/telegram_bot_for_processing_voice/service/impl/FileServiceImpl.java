@@ -1,5 +1,6 @@
 package com.telegram_bot_for_processing_voice.service.impl;
 
+import com.telegram_bot_for_processing_voice.exception.FileUploadException;
 import com.telegram_bot_for_processing_voice.service.AudioConverterService;
 import com.telegram_bot_for_processing_voice.service.FileService;
 import io.awspring.cloud.s3.S3Template;
@@ -54,7 +55,7 @@ public class FileServiceImpl implements FileService {
 
         } catch (IOException ex) {
             log.error("Ошибка при загрузке файла в Yandex Cloud: {}", ex.getMessage());
-            throw new RuntimeException("Ошибка при загрузке файла в Yandex Cloud", ex);
+            throw new FileUploadException("Ошибка при загрузке файла в Yandex Cloud", ex);
         }
     }
 

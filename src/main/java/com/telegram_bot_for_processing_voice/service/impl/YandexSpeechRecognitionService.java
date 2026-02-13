@@ -6,6 +6,7 @@ import com.telegram_bot_for_processing_voice.dto.RecognitionTextDTO;
 import com.telegram_bot_for_processing_voice.dto.request.AudioSource;
 import com.telegram_bot_for_processing_voice.dto.request.RecognitionConfig;
 import com.telegram_bot_for_processing_voice.dto.request.Specification;
+import com.telegram_bot_for_processing_voice.exception.SpeechRecognitionException;
 import com.telegram_bot_for_processing_voice.feign.YandexCloudOperationClient;
 import com.telegram_bot_for_processing_voice.feign.YandexCloudTranscribeClient;
 import com.telegram_bot_for_processing_voice.service.SpeechRecognitionService;
@@ -40,7 +41,7 @@ public class YandexSpeechRecognitionService implements SpeechRecognitionService 
         String operationId = getOperationID(uri);
 
         if (operationId == null || operationId.isBlank()) {
-            throw new IllegalStateException("Не удалось получить operationId");
+            throw new SpeechRecognitionException("Не удалось получить operationId");
         }
 
         long baseSleepMs = (long) (voiceDuration / 60) * 10 * 1000 + SAFETY_MARGIN_MS;
@@ -51,7 +52,7 @@ public class YandexSpeechRecognitionService implements SpeechRecognitionService 
             Thread.sleep(baseSleepMs);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new RuntimeException("Прерывание первичного ожидания", e);
+            throw new SpeechRecognitionException("Прерывание первичного ожидания", e);
         }
 
         int attempt = 0;
@@ -82,11 +83,11 @@ public class YandexSpeechRecognitionService implements SpeechRecognitionService 
                         "Ошибка при запросе информации о получении данных расшифровки в YandexCloud");
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                throw new RuntimeException("Прерывание ожидания результата", e);
+                throw new SpeechRecognitionException("Прерывание ожидания результата", e);
             }
         }
 
-        throw new RuntimeException(String.format(
+        throw new SpeechRecognitionException(String.format(
                 "❌ Не удалось распознать за %d попыток. Аудио: %d сек",
                 MAX_ATTEMPTS, voiceDuration));
     }

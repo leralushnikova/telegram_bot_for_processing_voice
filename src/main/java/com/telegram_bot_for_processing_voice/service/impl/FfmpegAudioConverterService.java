@@ -1,5 +1,6 @@
 package com.telegram_bot_for_processing_voice.service.impl;
 
+import com.telegram_bot_for_processing_voice.exception.AudioException;
 import com.telegram_bot_for_processing_voice.service.AudioConverterService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -52,7 +53,7 @@ public class FfmpegAudioConverterService implements AudioConverterService {
         } catch (Exception e) {
             inputFile.delete();
             outputFile.delete();
-            throw new IOException("Ошибка конвертации аудио: " + e.getMessage(), e);
+            throw new AudioException("Ошибка конвертации аудио: " + e.getMessage(), e);
         }
     }
     
@@ -99,7 +100,7 @@ public class FfmpegAudioConverterService implements AudioConverterService {
         int exitCode = process.waitFor();
         if (exitCode != 0) {
             log.error("ffmpeg output: {}", output);
-            throw new IOException("Ошибка конвертации ffmpeg, код: " + exitCode);
+            throw new AudioException("Ошибка конвертации ffmpeg, код: " + exitCode);
         }
         
         log.info("Конвертация завершена: {} -> {}", 

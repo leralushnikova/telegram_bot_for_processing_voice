@@ -79,7 +79,6 @@ public class JwtServiceImpl implements JwtService {
         } catch (IOException e) {
             log.error("Ошибка чтения приватного ключа", e);
             throw new JwtException("Не удалось прочитать приватный ключ", e);
-
         }
 
         return privateKeyPem;
@@ -117,5 +116,4 @@ public class JwtServiceImpl implements JwtService {
             throw new JwtException("Приватный ключ имеет некорректный формат.", e);
         }
     }
-
 }

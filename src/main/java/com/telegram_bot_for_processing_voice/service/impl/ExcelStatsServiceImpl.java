@@ -2,6 +2,9 @@ package com.telegram_bot_for_processing_voice.service.impl;
 
 import com.telegram_bot_for_processing_voice.model.enums.Action;
 import com.telegram_bot_for_processing_voice.service.ExcelStatsService;
+import com.telegram_bot_for_processing_voice.service.StatAnalyzeService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -21,13 +24,20 @@ import java.util.Map;
 /**
  * Сервис для создания Excel файлов со статистикой.
  */
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class ExcelStatsServiceImpl implements ExcelStatsService {
-    
+
+    private final StatAnalyzeService statAnalyzeService;
+
     @Override
-    public File createExcelStatsFile(Map<String, Map<Action, Integer>> stats)
+    public File createExcelStatsFile(Long chatId, String text)
             throws IOException {
-        
+        log.debug(text);
+
+        Map<String, Map<Action, Integer>> stats = statAnalyzeService.parseGameText(text.toLowerCase());
+
         if (stats.isEmpty()) {
             throw new IllegalArgumentException("Статистика пуста");
         }

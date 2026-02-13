@@ -9,6 +9,8 @@ import java.util.Set;
  */
 @UtilityClass
 public class Constants {
+    public static final long MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024;
+    public static final int MAX_DURATION_SECONDS = 45 * 60;
     public static final int BUFFER_SIZE = 4096;
     public static final String COMMAND_START = "/start";
     public static final String COMMAND_HELP = "/help";
