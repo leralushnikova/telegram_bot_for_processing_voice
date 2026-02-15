@@ -28,7 +28,7 @@ public class YandexCloudConfiguration {
         return requestTemplate -> {
 
             String userId =
-                    "текущий пользователь"; //TODO настроить получение уник.атрибута пользователя;
+                    "текущий пользователь";
 
             YandexCloudTokenDTO token = yandexCloudTokenService.getIamToken(userId);
 

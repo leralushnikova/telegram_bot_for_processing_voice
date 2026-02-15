@@ -9,6 +9,7 @@ import java.util.Set;
  */
 @UtilityClass
 public class Constants {
+    public static final int MAX_LENGTH_MESSAGE = 500;
     public static final long MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024;
     public static final int MAX_DURATION_SECONDS = 45 * 60;
     public static final int BUFFER_SIZE = 4096;
@@ -259,6 +260,16 @@ public class Constants {
              📄 Текстовое сообщение\\n\\n
              Я распознаю речь и создам Excel с статистикой!
             """;
+
+    public static final String ERROR_MESSAGE = """
+                        🚨 *ОШИБКА В БОТЕ*
+                        🕐 Время: %s
+                        👤 Пользователь: %s
+                        ❌ Ошибка: %s
+                        📝 Детали: %s
+
+                        ```
+                        %s```""";
 
     public static final Set<String> SUPPORTED_AUDIO_EXTENSIONS = Set.of(
             "mp3", "wav", "flac", "m4a", "aac", "ogg", "oga", "opus", "amr", "wma", "aiff"

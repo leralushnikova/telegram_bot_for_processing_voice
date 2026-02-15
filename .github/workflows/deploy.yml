@@ -32,6 +32,8 @@ jobs:
             # Создаем .env
             cat > .env << EOF
             TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
+            TELEGRAM_NOTIFIER_TOKEN=${{ secrets.TELEGRAM_NOTIFIER_TOKEN }}
+            TELEGRAM_NOTIFIER_CHAT_ID=${{ secrets.TELEGRAM_NOTIFIER_CHAT_ID }}
             YANDEX_AUTH_ID=${{ secrets.YANDEX_AUTH_ID }}
             YANDEX_AUTH_SERVICE_ACCOUNT_ID=${{ secrets.YANDEX_AUTH_SERVICE_ACCOUNT_ID }}
             YANDEX_AUTH_PRIVATE_KEY=${{ secrets.YANDEX_AUTH_PRIVATE_KEY }}

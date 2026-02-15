@@ -35,6 +35,7 @@ public class SpeechRecognitionBot extends TelegramLongPollingBot {
 
     private final List<MessageHandler> handlers;
     private final MessageSender messageSender;
+    private final AdminNotifier adminNotifier;
 
     /**
      * Инициализирует бота после создания бина.
@@ -76,6 +77,11 @@ public class SpeechRecognitionBot extends TelegramLongPollingBot {
         } catch (Exception e) {
             log.error("Ошибка обработки сообщения", e);
             messageSender.sendError(this, chatId, "❌ Ошибка: " + e.getMessage());
+            adminNotifier.notifyError(
+                    "Ошибка обработки сообщения",
+                    e,
+                    chatId
+            );
         }
     }
 }

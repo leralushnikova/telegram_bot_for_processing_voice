@@ -15,6 +15,9 @@ telegram:
   bot:
     token:
     username: StatVoiceBot
+  notifier:
+    token:
+    chat-id:
 
 yandex:
   iam:
