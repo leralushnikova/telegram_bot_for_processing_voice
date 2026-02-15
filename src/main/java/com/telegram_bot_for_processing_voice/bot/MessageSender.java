@@ -102,7 +102,7 @@ public class MessageSender {
 
         } catch (TelegramApiException e) {
             log.error("Ошибка отправки Excel файла", e);
-            sendText(bot, chatId, "❌ Не удалось отправить Excel файл");
+            sendText(bot, chatId, "Не удалось отправить Excel файл");
         }
     }
 
@@ -160,6 +160,6 @@ public class MessageSender {
      * @param errorMessage текст ошибки для отображения пользователю
      */
     public void sendError(SpeechRecognitionBot bot, Long chatId, String errorMessage) {
-        sendText(bot, chatId, "❌ Ошибка: " + errorMessage);
+        sendText(bot, chatId, errorMessage);
     }
 }
